@@ -1,0 +1,69 @@
+2022-08-03 14:03:06.435 INFO MicroWebView - <module>: APP Started
+2022-08-03 14:03:06.494 INFO MicroWebView - write: Adding Method login
+2022-08-03 14:03:06.494 INFO MicroWebView - write: RenderArgs
+2022-08-03 14:03:06.494 INFO MicroWebView - write: {'error': '', 'app_title': 'FrameWork', 'navDisable': False}
+2022-08-03 14:03:06.572 ERROR MicroWebView - write: [pywebview] Using GTK
+2022-08-03 14:03:06.572 DEBUG guilib - import_gtk: Using GTK
+2022-08-03 14:03:15.888 INFO MicroWebView - write: Removing Method login
+2022-08-03 14:03:15.888 INFO MicroWebView - write: Adding Method searchBook
+2022-08-03 14:03:15.888 INFO MicroWebView - write: Adding Method showMenu
+2022-08-03 14:03:15.889 INFO MicroWebView - write: RenderArgs
+2022-08-03 14:03:15.889 INFO MicroWebView - write: {'app_title': 'FrameWork', 'navDisable': False}
+2022-08-03 14:03:17.588 INFO MicroWebView - write: Removing Method searchBook
+2022-08-03 14:03:17.589 INFO MicroWebView - write: Removing Method showMenu
+2022-08-03 14:03:17.589 INFO MicroWebView - write: Adding Method openFile
+2022-08-03 14:03:17.589 INFO MicroWebView - write: Adding Method searchBook
+2022-08-03 14:03:17.589 INFO MicroWebView - write: Adding Method showMenu
+2022-08-03 14:03:17.589 INFO MicroWebView - write: RenderArgs
+2022-08-03 14:03:17.589 INFO MicroWebView - write: {'files': [{'file': 'ReadMe.txt', 'name': 'ReadMe'}], 'app_title': 'FrameWork', 'navDisable': False}
+2022-08-03 14:03:21.993 INFO MicroWebView - write: Removing Method openFile
+2022-08-03 14:03:21.994 INFO MicroWebView - write: Removing Method searchBook
+2022-08-03 14:03:21.994 INFO MicroWebView - write: Removing Method showMenu
+2022-08-03 14:03:21.994 INFO MicroWebView - write: Adding Method searchBook
+2022-08-03 14:03:21.994 INFO MicroWebView - write: Adding Method showMenu
+2022-08-03 14:03:21.994 INFO MicroWebView - write: RenderArgs
+2022-08-03 14:03:21.994 INFO MicroWebView - write: {'app_title': 'FrameWork', 'navDisable': False}
+2022-08-03 14:03:33.028 INFO MicroWebView - write: All done
+2022-08-03 14:04:26.571 INFO MicroWebView - <module>: APP Started
+2022-08-03 14:04:26.632 INFO MicroWebView - write: Adding Method login
+2022-08-03 14:04:26.632 INFO MicroWebView - write: RenderArgs
+2022-08-03 14:04:26.632 INFO MicroWebView - write: {'error': '', 'app_title': 'FrameWork', 'navDisable': False}
+2022-08-03 14:04:26.705 ERROR MicroWebView - write: [pywebview] Using GTK
+2022-08-03 14:04:26.705 DEBUG guilib - import_gtk: Using GTK
+2022-08-03 14:04:33.921 INFO MicroWebView - write: Removing Method login
+2022-08-03 14:04:33.922 INFO MicroWebView - write: Adding Method searchBook
+2022-08-03 14:04:33.922 INFO MicroWebView - write: Adding Method showMenu
+2022-08-03 14:04:33.922 INFO MicroWebView - write: RenderArgs
+2022-08-03 14:04:33.922 INFO MicroWebView - write: {'app_title': 'FrameWork', 'navDisable': False}
+2022-08-03 14:04:35.696 INFO MicroWebView - write: Removing Method searchBook
+2022-08-03 14:04:35.696 INFO MicroWebView - write: Removing Method showMenu
+2022-08-03 14:04:35.696 INFO MicroWebView - write: Adding Method openFile
+2022-08-03 14:04:35.696 INFO MicroWebView - write: Adding Method searchBook
+2022-08-03 14:04:35.696 INFO MicroWebView - write: Adding Method showMenu
+2022-08-03 14:04:35.696 INFO MicroWebView - write: RenderArgs
+2022-08-03 14:04:35.696 INFO MicroWebView - write: {'files': [{'file': 'ReadMe.txt', 'name': 'ReadMe'}], 'app_title': 'FrameWork', 'navDisable': False}
+2022-08-03 14:04:36.704 INFO MicroWebView - write: Removing Method openFile
+2022-08-03 14:04:36.704 INFO MicroWebView - write: Removing Method searchBook
+2022-08-03 14:04:36.705 INFO MicroWebView - write: Removing Method showMenu
+2022-08-03 14:04:36.705 INFO MicroWebView - write: Adding Method searchBook
+2022-08-03 14:04:36.705 INFO MicroWebView - write: Adding Method showMenu
+2022-08-03 14:04:36.705 INFO MicroWebView - write: RenderArgs
+2022-08-03 14:04:36.705 INFO MicroWebView - write: {'app_title': 'FrameWork', 'navDisable': False}
+2022-08-03 14:04:37.712 INFO MicroWebView - write: Removing Method searchBook
+2022-08-03 14:04:37.712 INFO MicroWebView - write: Removing Method showMenu
+2022-08-03 14:04:37.713 INFO MicroWebView - write: Adding Method openFile
+2022-08-03 14:04:37.713 INFO MicroWebView - write: Adding Method searchBook
+2022-08-03 14:04:37.713 INFO MicroWebView - write: Adding Method showMenu
+2022-08-03 14:04:37.713 INFO MicroWebView - write: RenderArgs
+2022-08-03 14:04:37.713 INFO MicroWebView - write: {'files': [{'file': 'ReadMe.txt', 'name': 'ReadMe'}], 'app_title': 'FrameWork', 'navDisable': False}
+2022-08-03 14:04:40.765 INFO MicroWebView - write: RenderArgs
+2022-08-03 14:04:40.765 INFO MicroWebView - write: {'files': [{'file': 'ReadMe.txt', 'name': 'ReadMe'}], 'app_title': 'FrameWork', 'navDisable': False, 'search': 'test'}
+2022-08-03 14:04:40.775 INFO MicroWebView - write: Removing Method openFile
+2022-08-03 14:04:40.776 INFO MicroWebView - write: Removing Method searchBook
+2022-08-03 14:04:40.776 INFO MicroWebView - write: Removing Method showMenu
+2022-08-03 14:04:40.776 INFO MicroWebView - write: Adding Method loadResult
+2022-08-03 14:04:40.776 INFO MicroWebView - write: Adding Method searchBook
+2022-08-03 14:04:40.776 INFO MicroWebView - write: Adding Method showMenu
+2022-08-03 14:04:40.776 INFO MicroWebView - write: RenderArgs
+2022-08-03 14:04:40.776 INFO MicroWebView - write: {'q': 'test', 'results': [{'id': 1, 'title': 'Title1'}, {'id': 0, 'title': 'Title2'}], 'app_title': 'FrameWork', 'navDisable': False, 'search': 'test'}
+2022-08-03 14:04:56.496 INFO MicroWebView - write: All done

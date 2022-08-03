@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title></title>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="http://cdn.jsdelivr.net/webshim/1.12.4/extras/modernizr-custom.js"></script>
+
+  <!-- Custom styles for this template -->
+  <style>
+        /*!
+     * Start Bootstrap - Simple Sidebar (https://startbootstrap.com/template/simple-sidebar)
+     * Copyright 2013-2020 Start Bootstrap
+     * Licensed under MIT (https://github.com/StartBootstrap/startbootstrap-simple-sidebar/blob/master/LICENSE)
+     */
+
+     #wrapper {
+        overflow-x: hidden;
+     }
+
+    #sidebar-wrapper {
+      min-height: 100vh;
+    }
+
+    #sidebar-wrapper .sidebar-heading {
+      padding: 0.875rem 1.25rem;
+      font-size: 1.2rem;
+    }
+
+    #sidebar-wrapper .list-group {
+      width: 15rem;
+    }
+
+    #page-content-wrapper {
+      margin-left: 15rem; 
+    }
+
+    #wrapper.toggled #sidebar-wrapper {
+      margin-left: 0;
+    }
+    a.disabled{
+        /* Make the disabled links grayish*/
+      color: gray;
+      /* And disable the pointer events */
+      pointer-events: none;
+    }
+
+   
+    .bookRow:hover {
+    background-color: #F2F2F2;
+    }
+    #sidebar-wrapper {
+    height: 100%; /* Full-height: remove this if you want "auto" height */
+    width: 15rem; /* Set the width of the sidebar */
+    position: fixed; /* Fixed Sidebar (stay in place on scroll) */
+    z-index: 1; /* Stay on top */
+    top: 0; /* Stay at the top */
+    left: 0;
+    background-color: #111; /* Black */
+    overflow-x: hidden; /* Disable horizontal scroll */
+  }
+  .sidebar-search{
+    margin-bottom:15px;
+  }
+  .container-fluid{
+    margin-top:15px;
+  }
+  .bookRow{
+    padding-top:5px;
+    padding-bottom:5px;
+  }
+  </style>
+</head>
+<body>
+  <div class="d-flex" id="wrapper">
+
+        <!-- Sidebar -->
+<div class="bg-light border-right" id="sidebar-wrapper">
+  <div class="sidebar-heading">FrameWork</div>
+  <div class="list-group list-group-flush">
+    <div class="sidebar-search">
+<div>
+  <div class="input-group">
+    <input type="text" class="form-control search-menu"  id='search' value='test' placeholder="Search...">
+    <div class="input-group-append">
+      <span class="input-group-text">
+        <i class="fa fa-search" id='searchBtn' aria-hidden="true"></i>
+      </span>
+    </div>
+  </div>
+</div>
+</div>
+<a href="/#" class="list-group-item list-group-item-action bg-light " data-name='index'>Home</a>
+<a href="/#" class="list-group-item list-group-item-action bg-light " data-name='documentation'>Documentation</a>
+  </div>
+</div>
+<!-- /#sidebar-wrapper -->
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper">    
+      <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+    <h2>Search Results test (2)</h2>
+</nav>
+      <div class="container-fluid">
+      
+<div class='row'>
+    
+    <div class="card mb-3 col-sm-12 col-md-6 col-lg-4" style="max-width: 540px;" >
+      <div class="row no-gutters">
+        <div class="col-sm-12">
+          <div class="card-body">
+            <h5 class="card-title"><a href='#' onclick="pywebview.api.loadBook('1')">Title1</a></h5>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card mb-3 col-sm-12 col-md-6 col-lg-4" style="max-width: 540px;" >
+      <div class="row no-gutters">
+        <div class="col-sm-12">
+          <div class="card-body">
+            <h5 class="card-title"><a href='#' onclick="pywebview.api.loadBook('0')">Title2</a></h5>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+</div>
+
+      </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+
+  </div>
+  <!-- /#wrapper -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script>
+  $(document).ready(function(){
+    $( window ).resize(function() {
+      $('#page-content-wrapper').width(window.innerWidth - $('#sidebar-wrapper').width())
+    });
+    $('#page-content-wrapper').width(window.innerWidth - $('#sidebar-wrapper').width())
+    
+
+    $('.list-group-item-action').click(function(e){
+        if($(this).hasClass("disabled")){
+          return false
+        }
+        pywebview.api.showMenu($(this).data('name'))
+    })
+    var input = document.getElementById("search");
+
+    $('#searchBtn').click(function(){
+        pywebview.api.searchBook(input.value)
+    })
+
+    // Execute a function when the user releases a key on the keyboard
+    input.addEventListener("keyup", function(event) {
+      // Number 13 is the "Enter" key on the keyboard
+      if (event.keyCode === 13) {
+        // Cancel the default action, if needed
+        event.preventDefault();
+        // Trigger the button element with a click
+        pywebview.api.searchBook(input.value)
+      }
+    });
+  });
+</script>
+
+</body>
+
+</html>

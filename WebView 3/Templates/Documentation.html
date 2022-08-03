@@ -1,0 +1,20 @@
+{% extends 'partials/frame.html' %}
+{% block title %}
+    <h2>Documentation</h2>
+{% endblock %}
+{% block content %}
+<div class='row'>
+	<div class='col-lg-12'>
+		<p>Click a link below to open the document</p>
+        {% for file in files %}
+	       <a href='#' class='fileLink' data-id='{{file["file"]}}'>{{file["name"]}}</a><br>
+        {% endfor %}
+	</div>
+    <script>
+    	$('.fileLink').click(function(e){
+			e.preventDefault()
+			pywebview.api.openFile($(this).data('id'))
+    	})
+    </script>
+</div>
+{% endblock %}

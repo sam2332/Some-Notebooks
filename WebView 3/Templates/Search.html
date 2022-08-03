@@ -1,0 +1,19 @@
+{% extends 'partials/frame.html' %}
+{% block title %}
+    <h2>Search Results {{q}} ({{results | length}})</h2>
+{% endblock %}
+{% block content %}
+<div class='row'>
+    {% for result in results %}
+    <div class="card mb-3 col-sm-12 col-md-6 col-lg-4" style="max-width: 540px;" >
+      <div class="row no-gutters">
+        <div class="col-sm-12">
+          <div class="card-body">
+            <h5 class="card-title"><a href='#' onclick="pywebview.api.loadBook('{{result['id']}}')">{{result['title']}}</a></h5>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

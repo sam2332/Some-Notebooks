@@ -1,0 +1,14 @@
+<div class="sidebar-search">
+<div>
+  <div class="input-group">
+    <input type="text" class="form-control search-menu" {{'disabled' if navDisable else ''}} id='search' value='{{search}}' placeholder="Search...">
+    <div class="input-group-append">
+      <span class="input-group-text">
+        <i class="fa fa-search" id='searchBtn' aria-hidden="true"></i>
+      </span>
+    </div>
+  </div>
+</div>
+</div>
+<a href="/#" class="list-group-item list-group-item-action bg-light {{'disabled' if navDisable else ''}}" data-name='index'>Home</a>
+<a href="/#" class="list-group-item list-group-item-action bg-light {{'disabled' if navDisable else ''}}" data-name='documentation'>Documentation</a>
