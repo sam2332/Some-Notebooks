@@ -1,0 +1,1 @@
+{"name": "Mining and Smelting", "initialState": "CheckInventory", "currentState": "BankOre", "rules": {"CheckInventory": {"name": "CheckInventory", "to": ["DoMining", "BankOre"]}, "DoMining": {"name": "DoMining", "to": ["CheckInventory"]}, "BankOre": {"name": "BankOre", "to": ["DoMining"]}}}
