@@ -5,7 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
-
+wiki_inventory
 # Distribution / packaging
 .Python
 build/
@@ -128,7 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-
+o365_token.txt
+.env
 .virtual_documents/
 **/*.rdl
 Android Automation/Beholder/game.png
