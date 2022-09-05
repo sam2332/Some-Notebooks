@@ -5,7 +5,8 @@ __pycache__/
 
 # C extensions
 *.so
-wiki_items/
+wiki_items
+
 .Python
 build/
 develop-eggs/
