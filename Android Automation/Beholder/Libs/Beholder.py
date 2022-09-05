@@ -170,6 +170,7 @@ class Beholder_Layer_Chopper:
 class Beholder_Matcher:
     def __init__(self, name, layer, enabled=False):
         self.enabled = enabled
+        self.data = ""
 
     def show(self):
         img = cv2.cvtColor(self.data, cv2.COLOR_BGR2RGB)
@@ -186,12 +187,13 @@ class Beholder_Image_Matcher(Beholder_Matcher):
     def __init__(self, name, layer, filename, threshhold=0.8, convertToGray=True):
         self.name = name
         self.layer = layer
+        self.data = ""
         if Path(filename).exists():
             self.data = PillowToCv2(Image.open(filename))
             if convertToGray:
                 self.data = cv2.cvtColor(self.data, cv2.COLOR_BGR2GRAY)
         else:
-            print("File is missing")
+            raise Exception(f"{filename} is missing")
 
         if threshhold is None:
             threshhold = 0.8
