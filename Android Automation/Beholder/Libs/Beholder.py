@@ -39,8 +39,6 @@ def tts(s, volume=None):
         tts_engine.setProperty("volume", old_volume)
 
 
-tts("startup")
-
 
 # In[ ]:
 
@@ -130,8 +128,9 @@ def pullPhoneScreen(resize_ratio=None, as_numpy=False, print_times=False):
 
 def PillowToCv2(img):
     img = np.array(img)
-    im = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-    return im
+    if img.shape[-1] > 1:
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    return img
 
 
 # In[ ]:
