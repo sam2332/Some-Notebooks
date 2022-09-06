@@ -230,12 +230,11 @@ class Beholder:
 
     def digestImage(self):
         for m in self.layer_modifiers:
+            if self.layer_modifiers[m].enabled:
+                u = self.layer_modifiers[m].run(self)
+                if u is not None:
+                    self.layers.update(u)
 
-            try:
-                if self.layer_modifiers[m].enabled:
-                    self.layers.update(self.layer_modifiers[m].run(self))
-            except Exception as e:
-                print(e)
 
     def findMatches(self, matchers=None):
         if matchers is None:
@@ -327,19 +326,20 @@ class Beholder_Layer_Chopper_InRange(Beholder_Layer_Chopper):
 
 
 class Beholder_Layer_TextExtract(Beholder_Layer_Chopper):
-    def __init__(self, name, from_layer, threshold, from_layer_is_bw):
+    def __init__(self, name, from_layer, threshold, from_layer_is_bw, enabled=False):
         self.name = name
         self.from_layer = from_layer
         self.threshold = threshold
         self.from_layer_is_bw = from_layer_is_bw
+        self.enabled = enabled
 
     def run(self, bh: Beholder):
         o = {}
-        img = Image.fromarray(bh[self.from_layer].data)
-        if not from_layer_is_bw:
+        img = Image.fromarray(bh.layers[self.from_layer].data)
+        if not self.from_layer_is_bw:
             img = img.convert("L")  # grayscale
         img = img.filter(ImageFilter.MedianFilter())  # a little blur
-        img = img.point(lambda x: 0 if x < 140 else 255)  # threshold (binarize)
+        img = img.point(lambda x: 0 if x < self.threshold else 255)  # threshold (binarize)
 
         txt = pytesseract.image_to_string(img)
         o[self.name] = txt.splitlines()
