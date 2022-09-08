@@ -94,10 +94,12 @@ def TypeTextOnPhone(text):
 
 
 def sleep(num, print_time=False):
-    s = random.choice([-1.75, -1, -0.5, 0, 0.5, 0.75, 1])
+    s = random.choice([-0.1, 0, 0.5, 0.75, 1])
     num += s
     if print_time:
         print(f"sleeping for: {num}")
+    if num <0:
+        num = 0.1
     time.sleep(num)
 
 
@@ -184,16 +186,25 @@ class Beholder_Matcher:
 
 
 class Beholder_Image_Matcher(Beholder_Matcher):
-    def __init__(self, name, layer, filename, threshhold=None,
-            convertToGray=True):
+    def __init__(self,
+                 name,
+                 layer,
+                 filename,
+                 threshhold=None,
+                 convertToGray=True,
+                 mask_filename = None):
         self.name = name
         self.layer = layer
         self.data = ""
+        self.mask = None
+        if mask_filename is not None:
+            self.mask = cv2.imread( mask_filename, cv2.IMREAD_UNCHANGED )
         if threshhold is None:
             threshhold = 0.8
         self.threshhold = threshhold
         if Path(filename).exists():
-            self.data = PillowToCv2(Image.open(filename))
+            self.data = cv2.imread(filename)
+            self.data = cv2.cvtColor(self.data, cv2.COLOR_RGB2BGR)
             if convertToGray:
                 self.data = cv2.cvtColor(self.data, cv2.COLOR_BGR2GRAY)
         else:
@@ -201,7 +212,7 @@ class Beholder_Image_Matcher(Beholder_Matcher):
 
     def run(self, bh):
         result = cv2.matchTemplate(
-            bh.layers[self.layer].data, self.data, method=cv2.TM_CCOEFF_NORMED
+            bh.layers[self.layer].data, self.data, method=cv2.TM_CCOEFF_NORMED,mask=self.mask
         )
         loc = np.where(result >= self.threshhold)
         o=defaultdict(list)
@@ -212,9 +223,10 @@ class Beholder_Image_Matcher(Beholder_Matcher):
         if bh.layers[self.layer].offsets is not None:
             layer_offset_x, layer_offset_y = bh.layers[self.layer].offsets
         for pt in zip(*loc[::-1]):
+            #print('pt',pt)
             item = (
-                    round(layer_offset_x + pt[0] / self.data.shape[0]),
-                    round(layer_offset_y + pt[1] / self.data.shape[1]),
+                    round(layer_offset_x + pt[0] / self.data.shape[1]),
+                    round(layer_offset_y + pt[1] / self.data.shape[0]),
                 )
             if item not in f:
                 f.add(
