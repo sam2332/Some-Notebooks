@@ -189,7 +189,8 @@ class Beholder_Image_Matcher(Beholder_Matcher):
     def __init__(self,
                  name,
                  layer,
-                 filename,
+                 filename=None,
+                 batch_folder=None,
                  threshhold=None,
                  convertToGray=True,
                  mask_filename = None):
@@ -202,44 +203,68 @@ class Beholder_Image_Matcher(Beholder_Matcher):
         if threshhold is None:
             threshhold = 0.8
         self.threshhold = threshhold
-        if Path(filename).exists():
-            self.data = cv2.imread(filename)
-            self.data = cv2.cvtColor(self.data, cv2.COLOR_RGB2BGR)
-            if convertToGray:
-                self.data = cv2.cvtColor(self.data, cv2.COLOR_BGR2GRAY)
+        if filename is not None:
+            self.mode = 'single'
+            if Path(filename).exists():
+                self.data = cv2.imread(filename)
+                self.data = cv2.cvtColor(self.data, cv2.COLOR_RGB2BGR)
+                if convertToGray:
+                    self.data = cv2.cvtColor(self.data, cv2.COLOR_BGR2GRAY)
+            else:
+                raise Exception(f"{filename} is missing")
+        elif batch_folder is not None:
+            self.mode = 'batch'
+            self.data = []
+            directory = Path(batch_folder)
+            if directory.exists():
+                for path in directory.iterdir():
+                    if path.is_file():
+                        data = cv2.imread(str(path))
+                        data = cv2.cvtColor(data, cv2.COLOR_RGB2BGR)
+                        if convertToGray:
+                            data = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY)
+                        self.data.append(data)
+            else:
+                raise Exception(f"{filename} is missing")
+
         else:
-            raise Exception(f"{filename} is missing")
+            raise Exception("ERROR LOADING MATCHER")
 
     def run(self, bh):
-        result = cv2.matchTemplate(
-            bh.layers[self.layer].data, self.data, method=cv2.TM_CCOEFF_NORMED,mask=self.mask
-        )
-        loc = np.where(result >= self.threshhold)
+        if self.mode =='single':
+            templates = [self.data]
+        else:
+            templates = self.data
         o=defaultdict(list)
         f = set()
-        
-        layer_offset_y = 0
-        layer_offset_x = 0
-        if bh.layers[self.layer].offsets is not None:
-            layer_offset_x, layer_offset_y = bh.layers[self.layer].offsets
-        for pt in zip(*loc[::-1]):
-            #print('pt',pt)
-            item = (
-                    round(layer_offset_x + pt[0] / self.data.shape[1]),
-                    round(layer_offset_y + pt[1] / self.data.shape[0]),
-                )
-            if item not in f:
-                f.add(
-                    item
-                ) 
-                
-                center = (layer_offset_x+pt[0],layer_offset_y+pt[1])
-                print("AddMatch",self.name, center)
-                if type(self.name) == str:
-                    o[self.name].append(BeholderMatch(self,self.layer, center,template_shape = self.data.shape))
-                elif type(self.name)==list:
-                    for name in self.name:
-                        o[name].append(BeholderMatch(self,self.layer, center,template_shape = self.data.shape))
+        for template in templates:
+            result = cv2.matchTemplate(
+                bh.layers[self.layer].data, template, method=cv2.TM_CCOEFF_NORMED,mask=self.mask
+            )
+            loc = np.where(result >= self.threshhold)
+
+            layer_offset_y = 0
+            layer_offset_x = 0
+            if bh.layers[self.layer].offsets is not None:
+                layer_offset_x, layer_offset_y = bh.layers[self.layer].offsets
+            for pt in zip(*loc[::-1]):
+                #print('pt',pt)
+                item = (
+                        round(layer_offset_x + pt[0] / template.shape[1]),
+                        round(layer_offset_y + pt[1] / template.shape[0]),
+                    )
+                if item not in f:
+                    f.add(
+                        item
+                    ) 
+
+                    center = (layer_offset_x+pt[0],layer_offset_y+pt[1])
+                    print("AddMatch",self.name, center)
+                    if type(self.name) == str:
+                        o[self.name].append(BeholderMatch(self,self.layer, center,template_shape = template.shape))
+                    elif type(self.name)==list:
+                        for name in self.name:
+                            o[name].append(BeholderMatch(self,self.layer, center,template_shape = template.shape))
         return o
 
 # In[ ]:
