@@ -133,3 +133,4 @@ o365_token.txt
 .virtual_documents/
 **/*.rdl
 Android Automation/Beholder/game.png
+Microsoft/Executable Signing Extractor/exports.json
