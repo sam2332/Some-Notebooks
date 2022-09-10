@@ -3,11 +3,9 @@
         {
             "type": "finalize",
             "info": {
-                "run_time": 1659989560
+                "run_time": 1662787382
             }
         }
     ],
-    "start_time": 1659989600,
-    "test": 7,
-    "completion": 85
+    "lastrun_time": 1662787382
 }
