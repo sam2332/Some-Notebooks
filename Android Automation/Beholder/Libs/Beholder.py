@@ -339,14 +339,14 @@ class Beholder:
 
 
 class Beholder_Layer_Chopper_Grayscale(Beholder_Layer_Chopper):
-    def __init__(self, name, from_layer, enabled=False):
-        self.name = name
+    def __init__(self, from_layer, enabled=False):
+        self.name = from_layer+"_gray"
         self.from_layer = from_layer
         self.enabled = enabled
 
     def run(self, bh: Beholder):
         o = {}
-        o[self.name] = Beholder_Layer(
+        o[self.from_layer + "_gray"] = Beholder_Layer(
             name=self.name,
             data=cv2.cvtColor(bh.layers[self.from_layer].data, cv2.COLOR_BGR2GRAY),
             offsets=bh.layers[self.from_layer].offsets
@@ -354,7 +354,40 @@ class Beholder_Layer_Chopper_Grayscale(Beholder_Layer_Chopper):
         return o
 
 
-# In[ ]:
+class Beholder_Layer_Chopper_ColorSplit(Beholder_Layer_Chopper):
+    def __init__(self, from_layer, enabled=False):
+        self.name = "RGB_splitter_" + from_layer
+        self.from_layer = from_layer
+        self.enabled = enabled
+
+    def run(self, bh: Beholder):
+        o = {}
+        frame = bh.layers[self.from_layer].data
+        height, width, layers = frame.shape
+        zeroImgMatrix = np.zeros((height, width), dtype="uint8")
+        # The OpenCV image sequence is Blue(B),Green(G) and Red(R)
+        (B, G, R) = cv2.split(frame)
+        # we would like to construct a 3 channel Image with only 1 channel filled
+        # and other two channels will be filled with zeros
+        B = cv2.merge([B, zeroImgMatrix, zeroImgMatrix])
+        G = cv2.merge([zeroImgMatrix, G, zeroImgMatrix])
+        R = cv2.merge([zeroImgMatrix, zeroImgMatrix, R])
+        o[self.from_layer + "_B"] = Beholder_Layer(
+            name=self.name,
+            data=B,
+            offsets=bh.layers[self.from_layer].offsets,
+        )
+        o[self.from_layer + "_G"] = Beholder_Layer(
+            name=self.name,
+            data=G,
+            offsets=bh.layers[self.from_layer].offsets,
+        )
+        o[self.from_layer + "_R"] = Beholder_Layer(
+            name=self.name,
+            data=R,
+            offsets=bh.layers[self.from_layer].offsets,
+        )
+        return o
 
 
 class Beholder_Layer_Chopper_InRange(Beholder_Layer_Chopper):
