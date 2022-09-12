@@ -259,7 +259,6 @@ class Beholder_Image_Matcher(Beholder_Matcher):
                     ) 
 
                     center = (layer_offset_x+pt[0],layer_offset_y+pt[1])
-                    print("AddMatch",self.name, center)
                     if type(self.name) == str:
                         o[self.name].append(BeholderMatch(self,self.layer, center,template_shape = template.shape))
                     elif type(self.name)==list:
