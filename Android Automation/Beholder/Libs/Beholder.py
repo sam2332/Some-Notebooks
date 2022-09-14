@@ -353,7 +353,40 @@ class Beholder_Layer_Chopper_Grayscale(Beholder_Layer_Chopper):
         )
         return o
 
+class Beholder_Layer_Chopper_PeakExtractor(Beholder_Layer_Chopper):
+    def __init__(self, name, from_layer, threshhold, enabled=False, avg_fwd=1):
+        self.name = name
+        self.from_layer = from_layer
+        self.threshhold = threshhold
+        self.enabled = enabled
+        self.avg_fwd = avg_fwd
 
+    def run(self, bh: Beholder):
+        o = {}
+        frame = cv2.cvtColor(bh.layers[self.from_layer].data, cv2.COLOR_BGR2GRAY)
+        finds = []
+        in_range = False
+        start = 0
+        end = 0
+        for c in range(0, frame.shape[1]):
+            a = [f for f in range(c, c + self.avg_fwd)]
+            avg = sum(a) / len(a)
+
+            cell = frame[0][c]
+            if cell > self.threshhold:
+                if not in_range:
+                    start = c
+                    end = c
+                    in_range = True
+            else:
+                if in_range:
+                    end = c
+                    finds.append((bh.layers[self.from_layer].offsets[0]+start, bh.layers[self.from_layer].offsets[0]+end))
+                    in_range = False
+        o[self.name] = finds
+        return o
+
+    
 class Beholder_Layer_Chopper_ColorSplit(Beholder_Layer_Chopper):
     def __init__(self, from_layer, enabled=False):
         self.name = "RGB_splitter_" + from_layer
