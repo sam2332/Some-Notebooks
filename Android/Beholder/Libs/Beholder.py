@@ -1,10 +1,12 @@
 
+import cv2
+import numpy as np
+from matplotlib import pyplot as plt
 
 import io
 import json
 import os
 import random
-import subprocess
 import time
 from collections import defaultdict
 from datetime import datetime
@@ -13,8 +15,6 @@ from pathlib import Path
 import numpy
 import pytesseract
 import requests
-from IPython.display import clear_output, display
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 from tqdm import tqdm
 
 
@@ -40,86 +40,14 @@ def tts(s, volume=None):
 
 
 
-# In[ ]:
-
-
-datetime.now().time()
 
 
 # In[ ]:
 
 
-import cv2
-import numpy as np
-
-
-# In[ ]:
-
-
-from matplotlib import pyplot as plt
-
-
-# In[ ]:
-
-
-def shell(cmd, debug=False, returns_POpen=False, close_fds=False):
-    if debug:
-        print(cmd)
-
-    if returns_POpen:
-        process = subprocess.Popen(cmd, close_fds=close_fds)
-        return process
-
-    process = subprocess.run(cmd, stdout=subprocess.PIPE)
-    return process.stdout.decode("utf-8").strip().splitlines()
-
-
-# In[ ]:
-
-
-def adb(cmd, debug=False, returns_POpen=False, close_fds=False):
-    # This function runs adb commands on your connected device or emulator.
-    if type(cmd) == str:
-        cmd = cmd.split(" ")
-    cmd = ["adb"] + cmd
-    return shell(cmd, debug=debug, returns_POpen=returns_POpen, close_fds=close_fds)
-
-
-def TypeTextOnPhone(text):
-    adb(["shell", "input", "text", text.replace(" ", "%s")])
-    adb(["shell", "input", "keyevent", "66"])
-
-
-# In[ ]:
-
-
-def sleep(num, print_time=False):
-    s = random.choice([-0.1, 0, 0.5, 0.75, 1])
-    num += s
-    if print_time:
-        print(f"sleeping for: {num}")
-    if num <0:
-        num = 0.1
-    time.sleep(num)
-
-
-# In[ ]:
-
-
-def pullPhoneScreen(resize_ratio=None, as_numpy=False, print_times=False):
-    s = time.time()
-    adb("shell screencap -p /sdcard/screen.png")
-    adb("pull /sdcard/screen.png ./game.png")
-    adb("shell rm /sdcard/screen.png")
-    im = Image.open("game.png")
+def ImageSource_SingleFile(path, as_numpy=False):
+    im = Image.open(path)
     im = im.convert("RGB")
-    if resize_ratio is not None:
-        im = im.resize(
-            (int(im.width * resize_ratio), int(im.height * resize_ratio)),
-            Image.Resampling.LANCZOS,
-        )
-    if print_times:
-        print("pull image took ", time.time() - s)
     if as_numpy:
         return numpy.array(im)
     return im
@@ -248,7 +176,6 @@ class Beholder_Image_Matcher(Beholder_Matcher):
             if bh.layers[self.layer].offsets is not None:
                 layer_offset_x, layer_offset_y = bh.layers[self.layer].offsets
             for pt in zip(*loc[::-1]):
-                #print('pt',pt)
                 item = (
                         round(layer_offset_x + pt[0] / template.shape[1]),
                         round(layer_offset_y + pt[1] / template.shape[0]),
@@ -309,7 +236,7 @@ class Beholder:
 
     def readNextImage(self):
         self.layers["image"] = Beholder_Layer(
-            name="image", data=PillowToCv2(self.generator()),offsets=(0,0)
+            name="image", data=PillowToCv2(next(self.generator)),offsets=(0,0)
         )
 
     def digestImage(self):
@@ -444,6 +371,16 @@ class Beholder_Layer_Chopper_InRange(Beholder_Layer_Chopper):
         )
         return o
 
+def sleep(num, print_time=False):
+    s = random.choice([-0.1, 0, 0.5, 0.75, 1])
+    num += s
+    if print_time:
+        print(f"sleeping for: {num}")
+    if num <0:
+        num = 0.1
+    time.sleep(num)
+
+
 
 # In[ ]:
 
@@ -497,4 +434,4 @@ class Beholder_Layer_Chopper_AtCord(Beholder_Layer_Chopper):
 # In[ ]:
 
 
-adb("wait-for-device")
+
