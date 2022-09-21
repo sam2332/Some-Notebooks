@@ -12,11 +12,13 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 import numpy
 import pytesseract
 import requests
 from tqdm import tqdm
 
+from IPython.display import clear_output, display
 
 # In[ ]:
 
@@ -58,8 +60,10 @@ def ImageSource_SingleFile(path, as_numpy=False):
 
 def PillowToCv2(img):
     img = np.array(img)
+    
     if img.shape[-1] > 1:
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    
     return img
 
 
@@ -112,27 +116,29 @@ class Beholder_Matcher:
 
 # In[ ]:
 
-
 class Beholder_Image_Matcher(Beholder_Matcher):
-    def __init__(self,
-                 name,
-                 layer,
-                 filename=None,
-                 batch_folder=None,
-                 threshhold=None,
-                 convertToGray=True,
-                 mask_filename = None):
+    def __init__(
+        self,
+        name,
+        layer,
+        filename=None,
+        batch_folder=None,
+        threshhold=None,
+        convertToGray=True,
+        mask_filename=None,
+    ):
         self.name = name
         self.layer = layer
         self.data = ""
         self.mask = None
+        self.convertToGray = convertToGray
         if mask_filename is not None:
-            self.mask = cv2.imread( mask_filename, cv2.IMREAD_UNCHANGED )
+            self.mask = cv2.imread(mask_filename, cv2.IMREAD_UNCHANGED)
         if threshhold is None:
             threshhold = 0.8
         self.threshhold = threshhold
         if filename is not None:
-            self.mode = 'single'
+            self.mode = "single"
             if Path(filename).exists():
                 self.data = cv2.imread(filename)
                 self.data = cv2.cvtColor(self.data, cv2.COLOR_RGB2BGR)
@@ -141,7 +147,7 @@ class Beholder_Image_Matcher(Beholder_Matcher):
             else:
                 raise Exception(f"{filename} is missing")
         elif batch_folder is not None:
-            self.mode = 'batch'
+            self.mode = "batch"
             self.data = []
             directory = Path(batch_folder)
             if directory.exists():
@@ -159,16 +165,26 @@ class Beholder_Image_Matcher(Beholder_Matcher):
             raise Exception("ERROR LOADING MATCHER")
 
     def run(self, bh):
-        if self.mode =='single':
+        if self.mode == "single":
             templates = [self.data]
         else:
             templates = self.data
-        o=defaultdict(list)
+        o = defaultdict(list)
         f = set()
         for template in templates:
-            result = cv2.matchTemplate(
-                bh.layers[self.layer].data, template, method=cv2.TM_CCOEFF_NORMED,mask=self.mask
-            )
+            if self.convertToGray:
+                result = cv2.matchTemplate(
+                    bh.layers[self.layer].data,
+                    template,
+                    method=cv2.TM_CCOEFF_NORMED,
+                    mask=self.mask,
+                )
+            else:
+                result = cv2.matchTemplate(
+                    bh.layers[self.layer].data[:, :, 0],
+                    template[:, :, 0],
+                    cv2.TM_SQDIFF_NORMED,
+                )
             loc = np.where(result >= self.threshhold)
 
             layer_offset_y = 0
@@ -177,40 +193,57 @@ class Beholder_Image_Matcher(Beholder_Matcher):
                 layer_offset_x, layer_offset_y = bh.layers[self.layer].offsets
             for pt in zip(*loc[::-1]):
                 item = (
-                        round(layer_offset_x + pt[0] / template.shape[1]),
-                        round(layer_offset_y + pt[1] / template.shape[0]),
-                    )
+                    round(layer_offset_x + pt[0] / template.shape[1]),
+                    round(layer_offset_y + pt[1] / template.shape[0]),
+                )
                 if item not in f:
-                    f.add(
-                        item
-                    ) 
+                    f.add(item)
 
-                    center = (layer_offset_x+pt[0],layer_offset_y+pt[1])
+                    center = (layer_offset_x + pt[0], layer_offset_y + pt[1])
                     if type(self.name) == str:
-                        o[self.name].append(BeholderMatch(self,self.layer, center,template_shape = template.shape))
-                    elif type(self.name)==list:
+                        o[self.name].append(
+                            BeholderMatch(
+                                self, self.layer, center, template_shape=template.shape
+                            )
+                        )
+                    elif type(self.name) == list:
                         for name in self.name:
-                            o[name].append(BeholderMatch(self,self.layer, center,template_shape = template.shape))
+                            o[name].append(
+                                BeholderMatch(
+                                    self,
+                                    self.layer,
+                                    center,
+                                    template_shape=template.shape,
+                                )
+                            )
         return o
-
 # In[ ]:
 
 class BeholderMatch():
-    def __init__(self,matcher,layer,center,template_shape):
+    def __init__(self,matcher,layer,upper_right,template_shape):
         self.matcher = matcher
         self.layer = layer
-        self.center = center
+        self.upper_right = upper_right
         self.template_shape = template_shape
         self.color = (255, 0, 0)
         self.thickness = 2
+        self.center = (
+            self.upper_right[0]+self.template_shape[0]/2,
+            self.upper_right[1]+self.template_shape[1]/2
+        )
     def show(self,bh):
         img = bh.layers[self.layer].data
-        center = (
-            self.center[0]-bh.layers[self.layer].offsets[0],
-            self.center[1]-bh.layers[self.layer].offsets[1]
+        img = cv2.rectangle(
+            img,
+            (self.upper_right[0], self.upper_right[1]),
+            (
+                self.upper_right[0]+self.template_shape[1],
+                 self.upper_right[1]+self.template_shape[0]
+            ), 
+            self.color,
+            self.thickness
         )
-        img = cv2.rectangle(img, (center[0], center[1]),
-                            (center[0]+self.template_shape[1], center[1]+self.template_shape[0]), self.color, self.thickness)
+        img = cv2.circle(img, center,radius=2,color =(255, 0, 0) , thickness=2)
         display(Image.fromarray(img))    
 
 
