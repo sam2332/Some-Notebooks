@@ -134,3 +134,4 @@ o365_token.txt
 **/*.rdl
 Android Automation/Beholder/game.png
 Microsoft/Executable Signing Extractor/exports.json
+Machine Learning/data/mnist/mnist.pkl
