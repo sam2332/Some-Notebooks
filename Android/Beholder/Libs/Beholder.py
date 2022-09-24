@@ -228,8 +228,8 @@ class BeholderMatch():
         self.color = (255, 0, 0)
         self.thickness = 2
         self.center = (
-            self.upper_right[0]+self.template_shape[0]/2,
-            self.upper_right[1]+self.template_shape[1]/2
+            self.upper_right[0]+self.template_shape[1]/2,
+            self.upper_right[1]+self.template_shape[0]/2
         )
     def show(self,bh):
         img = bh.layers[self.layer].data
