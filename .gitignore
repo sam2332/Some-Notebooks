@@ -6,6 +6,7 @@ Samples
 # C extensions
 *.so
 wiki_items
+game.png
 
 .Python
 build/
