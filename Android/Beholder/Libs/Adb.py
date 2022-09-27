@@ -26,27 +26,36 @@ def run_command(cmd, debug=False, returns_POpen=False, close_fds=False):
 
 
 def TypeTextOnPhone(text):
-    adb(["shell", "input", "text", text.replace(" ", "%s")])
-    adb(["shell", "input", "keyevent", "66"])
+    for ctext in list(str(text)):
+        run_command(["shell", "input", "text", ctext.replace(" ", "%s")])
+        time.sleep(0.1)
+    run_command(["shell", "input", "keyevent", "66"])
+    
+def type_number(number):
+    keymap = {"0":7,"1":8, "2":9, "3":10, "4":11, "5":12, "6":13, "7":14, "8":15, "9":16}
+    for cnumber in list(str(number)):
+        run_command(["shell", "input", "keyevent", str(keymap[cnumber])])
+        time.sleep(0.5)
+    run_command(["shell", "input", "keyevent", "66"])
 
-
-
-
-def ScreenCap(resize_ratio=None, as_numpy=False, print_times=False):
-    while True:
-        s = time.time()
-        run_command("shell screencap -p /sdcard/screen.png")
-        run_command("pull /sdcard/screen.png ./game.png")
-        run_command("shell rm /sdcard/screen.png")
-        im = Image.open("game.png")
-        im = im.convert("RGB")
-        if resize_ratio is not None:
-            im = im.resize(
-                (int(im.width * resize_ratio), int(im.height * resize_ratio)),
-                Image.Resampling.LANCZOS,
-            )
-        if print_times:
-            print("pull image took ", time.time() - s)
-        if as_numpy:
-            im =  numpy.array(im)
-        yield im
+class Toucher:
+    def __init__(self,bh):
+        pass
+    def tap(self,x,y):
+        run_command(f"shell input tap {x} {y}")
+    def type(self,text):
+        if type(text) ==str:
+            TypeTextOnPhone(text)
+        elif type(text) == int:
+            type_number(text)  
+        
+class ImageSource():
+    def generate(self):
+        while True:
+            s = time.time()
+            run_command("shell screencap -p /sdcard/screen.png")
+            run_command("pull /sdcard/screen.png ./game.png")
+            run_command("shell rm /sdcard/screen.png")
+            im = Image.open("game.png")
+            im = im.convert("RGB")
+            yield im

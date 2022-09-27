@@ -20,6 +20,8 @@ from tqdm import tqdm
 
 from IPython.display import clear_output, display
 
+
+from matplotlib import pyplot as plt
 # In[ ]:
 
 
@@ -42,7 +44,33 @@ def tts(s, volume=None):
 
 
 
+def secondsToTextDescription(time):
+    day = time // (24 * 3600)
+    time = time % (24 * 3600)
+    hour = time // 3600
+    time %= 3600
+    minutes = time // 60
+    time %= 60
+    seconds = time
 
+    out = []
+    if day > 0:
+        out.append(
+            f"{day} Days",
+        )
+    if hour >0:
+        out.append(
+            f"{hour} Hours",
+        )
+    if minutes > 0:
+        out.append(
+            f"{minutes} Minutes",
+        )
+    if seconds > 0:
+        out.append(
+            f"{seconds} Seconds",
+        )
+    return " ".join(out)
 
 # In[ ]:
 
@@ -55,14 +83,21 @@ def ImageSource_SingleFile(path, as_numpy=False):
     return im
 
 
+def green_blue_swap(image):
+    # 3-channel image (no transparency)
+    if image.shape[-1] == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    # 4-channel image (with transparency)
+    elif image.shape[-1] == 4:
+        image = cv2.cvtColor(image, cv2.COLOR_RGBA2BGR)
+    return image 
+
+
 # In[ ]:
 
 
 def PillowToCv2(img):
     img = np.array(img)
-    
-    if img.shape[-1] > 1:
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     
     return img
 
@@ -77,7 +112,8 @@ class Beholder_Layer:
         self.data = data
 
     def show(self):
-        img = cv2.cvtColor(self.data, cv2.COLOR_BGR2RGB)
+        img = self.data
+        #img = cv2.cvtColor(self.data, cv2.COLOR_BGR2RGB)
         display(Image.fromarray(img))
 
     def chop(self, new_name, x, y, h, w):
@@ -243,7 +279,7 @@ class BeholderMatch():
             self.color,
             self.thickness
         )
-        img = cv2.circle(img, center,radius=2,color =(255, 0, 0) , thickness=2)
+        img = cv2.circle(img, self.center,radius=2,color =(255, 0, 0) , thickness=2)
         display(Image.fromarray(img))    
 
 
@@ -252,11 +288,18 @@ class BeholderMatch():
 
 
 class Beholder:
-    def __init__(self, videoFrameGenerator):
-        self.generator = videoFrameGenerator
+    def __init__(self, ImageSource,toucher):
+        self.image_source = ImageSource
+        self.generator = self.image_source.generate()
         self.matchers = {}
         self.layers = {}
         self.layer_modifiers = {}
+        self.toucher = toucher
+    def tap(self,x,y):
+        self.toucher.tap(x,y)
+
+    def type(self,text):
+        self.toucher.type(text)
 
     def addLayerModifer(self, ch: Beholder_Layer_Chopper):
         self.layer_modifiers[ch.name] = ch
@@ -264,8 +307,10 @@ class Beholder:
     def addMatcher(self, m):
         if type(m.name) ==str:
             self.matchers[m.name] = m
-        else:
+        elif type(m.name) ==list:
             self.matchers['_'.join(m.name)] = m
+        else:
+            raise Exception("bad type str or list")
 
     def readNextImage(self):
         self.layers["image"] = Beholder_Layer(
