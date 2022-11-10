@@ -34,7 +34,6 @@ class ImageSource:
 
                     data = np.array(image, dtype=np.uint8)
                     data = green_blue_swap(data)
-                    data = cv2.cvtColor(data, cv2.COLOR_RGB2BGR)
                     yield data
                 except Exception as e:
                     print(e)
