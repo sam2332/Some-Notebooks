@@ -55,20 +55,32 @@ def secondsToTextDescription(time):
 
     out = []
     if day > 0:
+        Days_Plural=''
+        if day >1:
+            Days_Plural='s'
         out.append(
-            f"{day} Days",
+            f"{day} Day{Days_Plural}",
         )
     if hour >0:
+        Hours_Plural=''
+        if hour >1:
+            Hours_Plural='s'
         out.append(
-            f"{hour} Hours",
+            f"{hour} Hour{Hours_Plural}",
         )
     if minutes > 0:
+        Minutes_Plural=''
+        if minutes >1:
+            Minutes_Plural='s'
         out.append(
-            f"{minutes} Minutes",
+            f"{minutes} Minute{Minutes_Plural}",
         )
     if seconds > 0:
+        Seconds_Plural=''
+        if seconds >1:
+            Seconds_Plural='s'
         out.append(
-            f"{seconds} Seconds",
+            f"{seconds} Second{Seconds_Plural}",
         )
     return " ".join(out)
 
