@@ -57,18 +57,17 @@ def create_chat():
     room_name = request.form.get('room_name')
     roomSystemMsg = request.form.get('roomSystemMsg')
     if room_name not in chat_rooms:
+        if roomSystemMsg !="":
+            system_id = str(uuid.uuid4())
+            chat_rooms[room_name] = [{'id':system_id, 'system':roomSystemMsg}]   
 
-        system_id = str(uuid.uuid4())
-        chat_rooms[room_name] = [{'id':system_id, 'system':roomSystemMsg}]   
-
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=convertMessagesToGPTFormat(chat_rooms[room_name])#[{"role": "user", "content": user_input}]
-        )
-        print(response)
-        gpt_response = response['choices'][0]['message']['content']
-        response_id = str(uuid.uuid4())
-        chat_rooms[room_name].append({'id': response_id, 'gpt': gpt_response})
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=convertMessagesToGPTFormat(chat_rooms[room_name])#[{"role": "user", "content": user_input}]
+            )
+            gpt_response = response['choices'][0]['message']['content']
+            response_id = str(uuid.uuid4())
+            chat_rooms[room_name].append({'id': response_id, 'gpt': gpt_response})
         save_chat_rooms(chat_rooms)
         return jsonify({'success': True, 'message': 'Chat room created.'})
     else:
@@ -80,12 +79,13 @@ def delete_chat():
     room_name = request.form.get('room_name')
     if room_name in chat_rooms:
         del chat_rooms[room_name]
+        save_chat_rooms(chat_rooms)
         return jsonify({'success': True, 'message': 'Chat room deleted.'})
     else:
         return jsonify({'success': False, 'message': 'Chat room not found.'})
 # Specify the path to the folder you want to read
 system_templates_folder_path = 'SystemTemplates'
-
+archive_folder_path = "Archives"
 @app.route('/get_folder_contents')
 def get_folder_contents():
     try:
@@ -127,7 +127,6 @@ def get_file_content():
 def rename_chat_room():
     current_room_name = request.form.get('current_room_name')
     new_room_name = request.form.get('new_room_name')
-    print("rename",current_room_name,new_room_name)
     # Check if the current room exists and the new room name is not empty
     if current_room_name in chat_rooms and new_room_name:
         # Check if the new room name already exists
@@ -137,6 +136,7 @@ def rename_chat_room():
         # Rename the chat room by reassigning the chat history
         chat_rooms[new_room_name] = chat_rooms[current_room_name]
         del chat_rooms[current_room_name]
+        save_chat_rooms(chat_rooms)
         
         return jsonify({'success': True, 'message': 'Chat room renamed successfully.'})
     else:
