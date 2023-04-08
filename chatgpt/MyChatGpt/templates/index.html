@@ -13,6 +13,39 @@
 
     <!-- Custom styles for the chat interface -->
     <style> 
+
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 250px;
+            padding: 20px;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .sidebar.active {
+            transform: translateX(0);
+        }
+        .sidebar-toggle {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            cursor: pointer;
+        }
+        #main-content {
+            transition: transform 0.3s ease-in-out;
+        }
+        #main-content.slide {
+            transform: translateX(250px); /* Slide the content by the width of the sidebar */
+            max-width: calc(100vw - 250px);
+        }
         .textarea-container {
             position: relative;
         }
@@ -40,7 +73,6 @@
         }
         .wrapper {
             display: flex;
-            max-width: 100vw;
         }
         .sidebar {
             flex: 1;
@@ -58,7 +90,7 @@
             background-color: #f9f9f9;
         }
         .chat-area {
-            height: calc(100vh - 83px);
+            height: calc(100vh - 100px);
             overflow-y: auto;
             border: 1px solid #ccc;
             padding: 10px;
@@ -100,7 +132,7 @@
 <body>   
  <div class="wrapper">
         <!-- Sidebar with chat names -->
-        <div class="sidebar">
+        <div class="sidebar active" id='sidebar'>
             <h4>
                 Topics 
                 <button class="plus-button btn btn-sm btn-secondary pull-right" data-toggle="modal" data-target="#createChatModal">+</button>
@@ -110,7 +142,10 @@
             <hr>
         </div>
         <!-- Chat area and input field for user message -->
-        <div class="chat-container">
+        <div class="chat-container slide" id="main-content">
+        <i class="fa fa-bars hamburger" id="sidebarToggle"></i>
+
+
         
         <!-- Chat area and input field for user message -->
         <div class="chat-area" id="chatArea"></div>
@@ -121,7 +156,7 @@
                 </span>
                 <input type="text" class="form-control" id="userInput" placeholder="Type your message here...">
                 <span class="input-group-btn">
-                    <button class="btn btn-primary" type="submit">Send</button>
+                    <input class="btn btn-primary" type="submit" value="Send"/>
                 </span>
             </div>
         </form>
@@ -274,7 +309,12 @@
     $(document).ready(function() {
         updateChatNames();
 
-
+     $('#sidebarToggle').on('click', function() {
+                // Toggle the 'active' class on the sidebar
+                $('#sidebar').toggleClass('active');
+                // Toggle the 'slide' class on the main content
+                $('#main-content').toggleClass('slide');
+            });
         $('#archiveBtn').on('click', function() {
             var folderPath = $('#folderPath').val();
             if (folderPath) {
@@ -411,7 +451,8 @@
                     if (data.success) {
                         // Display GPT response in chat area
                         var responseID = 'msg-' + Date.now();
-                        $('#chatArea').append('<div class="gpt-response" id="' + responseID + '"><strong>GPT:</strong> ' + data.gpt_response + ' <span class="delete-btn" data-message-id="' + responseID + '">[Delete]</span></div>');
+                        var messageElem = '<strong class="pull-left">GPT:</strong> <div class="gpt-response" id="' + data.response_id + '"><span class="delete-btn pull-left" style="margin-left:15px;" data-message-id="' + data.response_id + '">[Delete]</span> <br>' + marked.parse(data.gpt_response) + '</div>';
+                        $('#chatArea').append(messageElem);
                         // Scroll to the bottom of the chat area
                         $('#chatArea').scrollTop($('#chatArea')[0].scrollHeight);
                     } else {
