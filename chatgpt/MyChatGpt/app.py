@@ -28,7 +28,6 @@ def convertMessagesToGPTFormat(a):
 # Create a Flask application
 app = Flask(__name__)
 openai.api_key = keyring.get_password("system", "openai_key")
-print(openai.api_key)
 
 # Initialize chat rooms dictionary
 chat_rooms = load_chat_rooms()
@@ -57,7 +56,9 @@ def create_chat():
     room_name = request.form.get('room_name')
     roomSystemMsg = request.form.get('roomSystemMsg')
     if room_name not in chat_rooms:
-        if roomSystemMsg !="":
+        if roomSystemMsg =="":
+            chat_rooms[room_name]=[]
+        else:
             system_id = str(uuid.uuid4())
             chat_rooms[room_name] = [{'id':system_id, 'system':roomSystemMsg}]   
 

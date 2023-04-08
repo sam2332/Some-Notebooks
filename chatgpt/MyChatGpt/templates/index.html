@@ -152,7 +152,7 @@
         <form id="chatForm" style="display:none;" >
             <div class="input-group">
                 <span class="input-group-btn">
-                    <button  class="btn btn-secondary" id='microphone'><i class="fa fa-microphone" style="color:red"></i></button>
+                    <button type="button" class="btn btn-secondary" id='microphone'><i class="fa fa-microphone" style="color:red"></i></button>
                 </span>
                 <input type="text" class="form-control" id="userInput" placeholder="Type your message here...">
                 <span class="input-group-btn">
@@ -292,11 +292,11 @@
                     data.chat_history.forEach(function(message) {
                         var messageElem;
                         if (message.user) {
-                            messageElem = '<div class="user-message" id="' + message.id + '"><strong>You:</strong>  <span class="delete-btn pull-right" data-message-id="' + message.id + '">[Delete]</span> ' + marked.parse(message.user)+ '</div>';
+                            messageElem = '<div class="user-message" id="' + message.id + '"><strong>You:</strong>  <span class="delete-btn pull-right" data-message-id="' + message.id + '">[Delete]</span> <br>' + marked.parse(message.user)+ '</div>';
                         } else if (message.gpt) {
-                            messageElem = '<strong class="pull-left">GPT:</strong> <div class="gpt-response" id="' + message.id + '"><span class="delete-btn pull-left" style="margin-left:15px;" data-message-id="' + message.id + '">[Delete]</span> ' + marked.parse(message.gpt) + '</div>';
+                            messageElem = '<strong class="pull-left">GPT:</strong> <div class="gpt-response" id="' + message.id + '"><span class="delete-btn pull-left" style="margin-left:15px;" data-message-id="' + message.id + '">[Delete]</span><br> ' + marked.parse(message.gpt) + '</div>';
                         }else if (message.system) {
-                            messageElem = '<div class="system-message" id="' + message.id + '"><strong>System:</strong> ' + marked.parse(message.system);
+                            messageElem = '<div class="system-message" id="' + message.id + '"><strong>System:</strong> <br>' + marked.parse(message.system);
                         }
                         $('#chatArea').append(messageElem);
                     });
