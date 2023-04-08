@@ -8,12 +8,34 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <!-- Custom styles for the chat interface -->
     <style> 
+               .textarea-container {
+            position: relative;
+        }
+        .custom-textarea {
+            width: 100%;
+            height: 350px;
+            resize: vertical;
+        }
+        .float-button {
+            position: absolute;
+            top: -30px;
+            right: 14px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 12px 12px 0 0;
+        }
         #chatNamesList > li{
             list-style: none;
             text-decoration: underline;
             margin-bottom: 5px;
+            cursor:pointer;
         }
      .wrapper {
             display: flex;
@@ -55,6 +77,13 @@
         border: 1px solid #ccc;
     }
 
+        .system-message {
+            text-align: left;
+            margin-bottom: 10px;
+            padding:5px;
+            background-color:  goldenrod;
+            white-space: pre-wrap;
+        }
         .user-message {
             text-align: right;
             margin-bottom: 5px;
@@ -75,14 +104,13 @@
  <div class="wrapper">
         <!-- Sidebar with chat names -->
         <div class="sidebar">
-            <h4>Chat Rooms</h4>
-            <ul id="chatNamesList"></ul>
+            <h4>
+                Topics 
+                <button class="plus-button btn btn-sm btn-secondary pull-right" data-toggle="modal" data-target="#createChatModal">+</button>
+            </h4>
+            <ul id="chatNamesList" class='mt-3'></ul>
             <!-- Input field for chat room name -->
             <hr>
-            <form id="roomForm">
-                    <input type="text" class="form-control" id="roomName" placeholder="Enter chat room name...">
-                <button class="btn btn-primary btn-block" type="submit">Create/Join Chat Room</button>
-            </form>
         </div>
         <!-- Chat area and input field for user message -->
         <div class="chat-container">
@@ -99,8 +127,102 @@
         </form>
     </div>
 </div>
+<div class="modal fade" id="manageChatModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Manage Chat Room</h4>
+            </div>
+            <div class="modal-body">
+                <form id="roomForm">
+                    <div class="form-group">
+                        <label for="roomName">Chat Room Name</label>
+                        <input type="text" class="form-control" id="roomName" placeholder="Enter chat room name...">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="renameRoomBtn">Rename</button>
+                <button type="button" class="btn btn-danger" id="deleteRoomBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    
+    <!-- Modal for creating a new chat room -->
+<div class="modal fade" id="createChatModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Create Chat Room</h4>
+            </div>
+            <div class="modal-body">
+                <form id="roomForm">
+                    <div class="form-group">
+                        <label for="create_roomName">Chat Room Name</label>
+                        <input type="text" class="form-control" id="create_roomName" placeholder="Enter chat room name...">
+                    </div>
+                    <div class="form-group">
+                        <label for="roomName">Chat Room System Prompt</label>
+                        <div class="textarea-container">
+                            <textarea  class="form-control custom-textarea" id="create_roomSystemMsg"></textarea>
+                            <a class="float-button" data-toggle="modal" data-target="#SystemTemplateModal">Load</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="createRoomBtn">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Modal for displaying the dropdown with folder contents -->
+<div class="modal fade" id="SystemTemplateModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Select File</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="fileDropdown">Select a file:</label>
+                        <select class="form-control" id="fileDropdown">
+                            <!-- Options will be populated using JavaScript/jQuery -->
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id='selectFileBtn'>Select</button>
+                </div>
+            </div>
+        </div>
+    </div>
 <script>
+
+
+    marked.setOptions({ sanitize: true})
+
     var currentRoom = null;
+    var roomToManage = null;
+    
+
     function updateChatNames() {
         $.get('/get_chat_names', function(data) {
             if (data.success) {
@@ -111,6 +233,14 @@
                         currentRoom = chatName;
                         updateChatHistory();  // Fetch and update chat history for the selected room
                         $('#chatForm').show();
+                    });
+
+                     listItem.on('contextmenu', function(event) {
+                        event.preventDefault();  // Prevent the default context menu from appearing
+                        roomToManage = chatName;  // Store the chat room to be renamed
+                        $('#roomName').val(roomToManage);
+
+                        $('#manageChatModal').modal('show');  // Show the rename modal
                     });
                     $('#chatNamesList').append(listItem);
                 });
@@ -127,9 +257,11 @@
                     data.chat_history.forEach(function(message) {
                         var messageElem;
                         if (message.user) {
-                            messageElem = '<div class="user-message" id="' + message.id + '"><strong>You:</strong> ' + message.user + ' <span class="delete-btn" data-message-id="' + message.id + '">[Delete]</span></div>';
+                            messageElem = '<div class="user-message" id="' + message.id + '"><strong>You:</strong>  <span class="delete-btn pull-right" data-message-id="' + message.id + '">[Delete]</span> ' + marked.parse(message.user)+ '</div>';
                         } else if (message.gpt) {
-                            messageElem = '<div class="gpt-response" id="' + message.id + '"><strong>GPT:</strong> ' + message.gpt + ' <span class="delete-btn" data-message-id="' + message.id + '">[Delete]</span></div>';
+                            messageElem = '<strong class="pull-left">GPT:</strong> <div class="gpt-response" id="' + message.id + '"><span class="delete-btn pull-left" style="margin-left:15px;" data-message-id="' + message.id + '">[Delete]</span> ' + marked.parse(message.gpt) + '</div>';
+                        }else if (message.system) {
+                            messageElem = '<div class="system-message" id="' + message.id + '"><strong>System:</strong> ' + marked.parse(message.system);
                         }
                         $('#chatArea').append(messageElem);
                     });
@@ -140,28 +272,132 @@
 
 
     $(document).ready(function() {
-            updateChatNames();
-        // Create or join chat room
-        $('#roomForm').on('submit', function(event) {
-            event.preventDefault();
-            var roomName = $('#roomName').val();
-            if (roomName) {
-                currentRoom = roomName;
-                $('#chatArea').empty();
-                $('#chatForm').show();
-                $.post('/create_chat', {room_name: roomName}, function(data) {
-                    if (!data.success) {
+        updateChatNames();
+
+
+        $('#archiveBtn').on('click', function() {
+            var folderPath = $('#folderPath').val();
+            if (folderPath) {
+                // Send request to server to archive chats
+                $.post('/archive_chats', {folder_path: folderPath}, function(data) {
+                    if (data.success) {
+                        // Successfully archived chats
                         alert(data.message);
-                        
-                    }else{
-                        $('#roomName').val('');
-                        updateChatNames()
+                        $('#archiveModal').modal('hide');
+                    } else {
+                        // Failed to archive chats
+                        alert(data.message);
                     }
                 });
+            } else {
+                alert('Please enter a folder path.');
             }
         });
 
-        // Send message and get GPT response
+
+        $('#SystemTemplateModal').on('show.bs.modal', function() {
+                // Request folder contents from the Python back-end
+                $.get('/get_folder_contents', function(data) {
+                    if (data.success) {
+                        // Populate the dropdown options
+                        var fileDropdown = $('#fileDropdown');
+                        fileDropdown.empty();
+                        data.folder_contents.forEach(function(file) {
+                            fileDropdown.append('<option value="' + file + '">' + file + '</option>');
+                        });
+                    } else {
+                        alert(data.message);
+                    }
+                });
+            });
+ // Load the file content and set it to the textarea
+        $('#selectFileBtn').on('click', function() {
+            // Get the selected filename from the dropdown
+            var selectedFile = $('#fileDropdown').val();
+            if (selectedFile) {
+                // Request file content from the Python back-end
+                $.get('/get_file_content', {filename: selectedFile}, function(data) {
+                    if (data.success) {
+                        // Set the file content to the textarea with ID 'create_roomSystemMsg'
+                        $('#create_roomSystemMsg').val(data.file_content);
+                        // Close the modal
+                        $('#SystemTemplateModal').modal('hide');
+                    } else {
+                        alert(data.message);
+                    }
+                });
+            } else {
+                alert('Please select a file.');
+            }
+        });
+        // Create or join chat room
+          $('#createRoomBtn').on('click', function() {
+            var roomName = $('#create_roomName').val();
+            var systemMsg = $('#create_roomSystemMsg').val();
+            if (roomName) {
+                $.post('/create_chat', {room_name: roomName,roomSystemMsg:systemMsg}, function(data) {
+                    if (data.success) {
+                        // Chat room created successfully
+                        // Perform any desired actions (e.g., show a success message, redirect to chat room)
+                        updateChatNames()
+                        // Close the modal
+                        $('#createChatModal').modal('hide');
+                        // Clear the input field
+                        $('#create_roomName').val('');
+                        $('#create_roomSystemMsg').val('');
+                        currentRoom = roomName;
+                        updateChatHistory(); 
+                        $('#chatForm').show();
+                    } else {
+                        // Chat room creation failed
+                        // Show an error message
+                        alert(data.message);
+                    }
+                });
+            } else {
+                // Chat room name is empty
+                // Show an error message
+                alert('Please enter a chat room name.');
+            }
+        });
+        // Delete a chat room
+        $('#deleteRoomBtn').on('click', function() {
+            $.post('/delete_chat', {room_name: window.roomToManage}, function(data) {
+                if (data.success) {
+                    // Chat room deleted successfully
+                    // Perform any desired actions
+                    alert(data.message);
+                    updateChatNames()
+                    $('#manageChatModal').modal('hide');
+                    $('#roomName').val('');
+                    $('#chatForm').hide();
+                } else {
+                    // Chat room deletion failed
+                    alert(data.message);
+                }
+            });
+        });
+        $("#renameRoomBtn").click(function(){
+            event.preventDefault();
+            var newChatRoomName = $('#roomName').val();
+            if (newChatRoomName) {
+                // AJAX request to rename the chat room on the server
+                $.post('/rename_chat_room', {current_room_name: roomToManage, new_room_name: newChatRoomName}, function(data) {
+                  if (data.success) {
+                    alert('Chat room renamed successfully!');
+                    currentRoom = newChatRoomName; // Update the current room name
+                    updateChatNames(); // Update the list of chat room names
+                    $('#manageChatModal').modal('hide');
+                    $('#roomName').val('');
+                  } else {
+                    alert(data.message);
+                  }
+                }); 
+            } else {
+            alert('Please enter a new chat room name.');
+            }
+        });
+      // Send message and get GPT response
         $('#chatForm').on('submit', function(event) {
             event.preventDefault();
             var userInput = $('#userInput').val();
