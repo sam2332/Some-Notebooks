@@ -3,16 +3,44 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <title>Chat with GPT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>Topic with GPT</title>
     <!-- Include Bootstrap 3 -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-    <!-- Custom styles for the chat interface -->
+  
+    <!-- Custom styles for the topic interface -->
     <style> 
+
+        .markdown-body table th, .markdown-body table td {
+            padding: 6px 13px;
+            border: 1px solid #d0d7de;
+        }
+
+        .markdown-body table th {
+          font-weight: 600;
+        }
+
+        .markdown-body table th,
+        .markdown-body table td {
+          padding: 6px 13px;
+          border: 1px solid #d0d7de;
+        }
+
+        .markdown-body table tr {
+          background-color: #ffffff;
+          border-top: 1px solid hsla(210,18%,87%,1);
+        }
+
+        .markdown-body table tr:nth-child(2n) {
+          background-color: #f6f8fa;
+        }
+
+        .markdown-body table img {
+          background-color: transparent;
+        }
 
 
         body {
@@ -54,6 +82,11 @@
             height: 350px;
             resize: vertical;
         }
+        .float-button a{
+            color: white;
+            padding-right:2px;
+            padding-left:2px;
+        }
         .float-button {
             position: absolute;
             top: -30px;
@@ -65,7 +98,7 @@
             cursor: pointer;
             border-radius: 12px 12px 0 0;
         }
-        #chatNamesList > li{
+        #topicNamesList > li{
             list-style: none;
             text-decoration: underline;
             margin-bottom: 5px;
@@ -82,29 +115,28 @@
             margin-right: 10px;
             max-width: 236px;
         }
-        .chat-container {
+        .topic-container {
             flex: 2;
             padding: 20px;
             border: 1px solid #ccc;
             border-radius: 5px;
             background-color: #f9f9f9;
         }
-        .chat-area {
+        .topic-area {
             height: calc(100vh - 100px);
             overflow-y: auto;
             border: 1px solid #ccc;
-            padding: 10px;
+            padding: 0px;
             margin-bottom: 10px;
         }
-        .chat-container {
+        .topic-container {
             position: relative;
             padding: 20px;
-            height: 100vh; /* Set chat container height to 100% of viewport height */
+            height: 100vh; /* Set topic container height to 100% of viewport height */
             box-sizing: border-box; /* Include padding in the total height */
         }
-        .chat-area {
+        .topic-area {
             overflow-y: auto;
-            padding: 10px;
             margin-bottom: 10px;
             border: 1px solid #ccc;
         }
@@ -112,7 +144,7 @@
             text-align: left;
             margin-bottom: 10px;
             padding:5px;
-            background-color:  beige;
+            background-color: khaki;
         }
         .user-message {
             text-align: right;
@@ -121,7 +153,8 @@
         .gpt-response {
             text-align: left;
             margin-bottom: 5px;
-            background-color:  bisque;
+            padding-left:5px;
+            background-color: bisque;
         }
         .delete-btn {
             cursor: pointer;
@@ -131,30 +164,31 @@
 </head>
 <body>   
  <div class="wrapper">
-        <!-- Sidebar with chat names -->
+        <!-- Sidebar with topic names -->
         <div class="sidebar active" id='sidebar'>
             <h4>
                 Topics 
-                <button class="plus-button btn btn-sm btn-secondary pull-right" data-toggle="modal" data-target="#createChatModal">+</button>
+                <button class="plus-button btn btn-sm btn-secondary pull-right" data-toggle="modal" data-target="#createTopicModal">+</button>
             </h4>
-            <ul id="chatNamesList" class='mt-3'></ul>
-            <!-- Input field for chat room name -->
+            <ul id="topicNamesList" class='mt-3'></ul>
+            <!-- Input field for Topic name -->
             <hr>
         </div>
-        <!-- Chat area and input field for user message -->
-        <div class="chat-container slide" id="main-content">
+        <!-- Topic area and input field for user message -->
+        <div class="topic-container slide" id="main-content">
         <i class="fa fa-bars hamburger" id="sidebarToggle"></i>
+        <span id='billingTotal'></span>
 
 
         
-        <!-- Chat area and input field for user message -->
-        <div class="chat-area" id="chatArea"></div>
-        <form id="chatForm" style="display:none;" >
+        <!-- Topic area and input field for user message -->
+        <div class="topic-area" id="topicArea"></div>
+        <form id="topicForm" style="display:none;" >
             <div class="input-group">
                 <span class="input-group-btn">
                     <button type="button" class="btn btn-secondary" id='microphone'><i class="fa fa-microphone" style="color:red"></i></button>
                 </span>
-                <input type="text" class="form-control" id="userInput" placeholder="Type your message here...">
+                <input type="text" class="form-control" id="userInput" autocomplete="off" placeholder="Type your message here...">
                 <span class="input-group-btn">
                     <input class="btn btn-primary" type="submit" value="Send"/>
                 </span>
@@ -162,20 +196,20 @@
         </form>
     </div>
 </div>
-<div class="modal fade" id="manageChatModal" tabindex="-1" role="dialog">
+<div class="modal fade" id="manageTopicModal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
-                <h4 class="modal-title">Manage Chat Room</h4>
+                <h4 class="modal-title">Manage Topic</h4>
             </div>
             <div class="modal-body">
                 <form id="roomForm" onkeydown="return event.key != 'Enter';">
                     <div class="form-group">
-                        <label for="roomName">Chat Room Name</label>
-                        <input type="text" class="form-control" id="roomName" placeholder="Enter chat room name...">
+                        <label for="roomName">Topic Name</label>
+                        <input type="text" class="form-control" id="roomName" placeholder="Enter Topic name...">
                     </div>
                 </form>
             </div>
@@ -191,34 +225,36 @@
 
 
     
-    <!-- Modal for creating a new chat room -->
-<div class="modal fade" id="createChatModal" tabindex="-1" role="dialog">
+    <!-- Modal for creating a new Topic -->
+<div class="modal fade" id="createTopicModal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
-                <h4 class="modal-title">Create Chat Room</h4>
+                <h4 class="modal-title">Create Topic</h4>
             </div>
             <div class="modal-body">
-                <form id="roomForm"  onkeydown="return event.key != 'Enter';">
+                <form id="roomForm" >
                     <div class="form-group">
-                        <label for="create_roomName">Chat Room Name</label>
-                        <input type="text" class="form-control" id="create_roomName" placeholder="Enter chat room name...">
+                        <label for="create_roomName">Topic Name</label>
+                        <input type="text" class="form-control" id="create_roomName" placeholder="Enter Topic name..." onkeydown="return event.key != 'Enter';">
                     </div>
                     <div class="form-group">
-                        <label for="roomName">Chat Room System Prompt</label>
+                        <label for="roomName">Topic System Prompt Template</label>
                         <div class="textarea-container">
                             <textarea  class="form-control custom-textarea" id="create_roomSystemMsg"></textarea>
-                            <a class="float-button" data-toggle="modal" data-target="#SystemTemplateModal">Load</a>
+                            <div class="float-button">
+                                <a  data-toggle="modal" data-target="#SystemTemplateModal">Load Template</a>
+                            </div>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="createRoomBtn">Create</button>
+                <button type="button" class="btn btn-primary" id="Create">Create</button>
             </div>
         </div>
     </div>
@@ -226,29 +262,69 @@
 
     <!-- Modal for displaying the dropdown with folder contents -->
 <div class="modal fade" id="SystemTemplateModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Select File</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="fileDropdown">Select a file:</label>
+                    <select class="form-control" id="fileDropdown">
+                        <!-- Options will be populated using JavaScript/jQuery -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id='selectFileBtn'>Select</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+ <!-- Modal for filling in the placeholders -->
+<div class="modal fade" id="templateModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Fill in the Blanks</h4>
+            </div>
+            <div class="modal-body">
+                <form id="templateForm">
+                    <!-- Form fields will be dynamically generated here -->
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="template_submitBtn">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Modal with spinner -->
+    <div class="modal" tabindex="-1" role="dialog" id="spinnerModal" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <h4 class="modal-title">Select File</h4>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="fileDropdown">Select a file:</label>
-                        <select class="form-control" id="fileDropdown">
-                            <!-- Options will be populated using JavaScript/jQuery -->
-                        </select>
+                <div class="modal-body text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id='selectFileBtn'>Select</button>
+                    <p>Loading...</p>
                 </div>
             </div>
         </div>
     </div>
+
+
+
 <script>
 
 
@@ -257,48 +333,58 @@
     var currentRoom = null;
     var roomToManage = null;
     
-
-    function updateChatNames() {
-        $.get('/get_chat_names', function(data) {
+    function formatCurrency(value, currencyCode) {
+      // Create a NumberFormat object with currency formatting options
+      const formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currencyCode
+      });
+      // Format the value as currency
+      return formatter.format(value);
+    }
+    function updateTopicNames() {
+        $.get('/get_topic_names', function(data) {
             if (data.success) {
-                $('#chatNamesList').empty();
-                data.chat_names.forEach(function(chatName) {
-                    var listItem = $('<li>').text(chatName);
+                $('#topicNamesList').empty();
+                data.topic_names.forEach(function(topicName) {
+                    var listItem = $('<li>').text(topicName);
                     listItem.on('click', function() {
-                        currentRoom = chatName;
-                        updateChatHistory();  // Fetch and update chat history for the selected room
-                        $('#chatForm').show();
+                        currentRoom = topicName;
+                        
+                        updateBillingTotal()
+                        updateTopicHistory();  // Fetch and update topic history for the selected room
+                        $('#topicForm').show();
                     });
 
                      listItem.on('contextmenu', function(event) {
                         event.preventDefault();  // Prevent the default context menu from appearing
-                        roomToManage = chatName;  // Store the chat room to be renamed
+                        roomToManage = topicName;  // Store the Topic to be renamed
                         $('#roomName').val(roomToManage);
 
-                        $('#manageChatModal').modal('show');  // Show the rename modal
+                        $('#manageTopicModal').modal('show');  // Show the rename modal
                     });
-                    $('#chatNamesList').append(listItem);
+                    $('#topicNamesList').append(listItem);
                 });
             }
         });
     }
 
-    // Function to fetch and update chat history for the current room
-    function updateChatHistory() {
+    // Function to fetch and update topic history for the current room
+    function updateTopicHistory() {
         if (currentRoom) {
-            $.get('/get_chat_history', {room_name: currentRoom}, function(data) {
-                $('#chatArea').empty();
+            $.get('/get_topic_info', {room_name: currentRoom}, function(data) {
+                $('#topicArea').empty();
                 if (data.success) {
-                    data.chat_history.forEach(function(message) {
+                    data.topic_history.messages.forEach(function(message) {
                         var messageElem;
                         if (message.user) {
-                            messageElem = '<div class="user-message" id="' + message.id + '"><strong>You:</strong>  <span class="delete-btn pull-right" data-message-id="' + message.id + '">[Delete]</span> <br>' + marked.parse(message.user)+ '</div>';
+                            messageElem = '<div class="user-message" id="' + message.id + '"><strong>You:</strong>  <span class="delete-btn pull-right" data-message-id="' + message.id + '">[Delete]</span> <br><div class="markdown-body">' + marked.parse(message.user)+ '</div></div>';
                         } else if (message.gpt) {
-                            messageElem = '<strong class="pull-left">GPT:</strong> <div class="gpt-response" id="' + message.id + '"><span class="delete-btn pull-left" style="margin-left:15px;" data-message-id="' + message.id + '">[Delete]</span><br> ' + marked.parse(message.gpt) + '</div>';
+                            messageElem = ' <div class="gpt-response" id="' + message.id + '"><strong class="pull-left">GPT:</strong><span class="delete-btn pull-left" style="margin-left:15px;" data-message-id="' + message.id + '">[Delete]</span><br><div class="markdown-body"> ' + marked.parse(message.gpt) + '</div></div>';
                         }else if (message.system) {
-                            messageElem = '<div class="system-message" id="' + message.id + '"><strong>System:</strong> <br>' + marked.parse(message.system);
+                            messageElem = '<div class="system-message" id="' + message.id + '"><strong>System:</strong> <br><div class="markdown-body">' + marked.parse(message.system)+"</div></div>";
                         }
-                        $('#chatArea').append(messageElem);
+                        $('#topicArea').append(messageElem);
                     });
                 }
             });
@@ -306,8 +392,94 @@
     }
 
 
+    function updateBillingTotal() {
+        // Send a request to the Flask route to get the billing total
+        $.get('/get_billing_total', {room_name: window.currentRoom}, function(response) {
+            if (response.success) {
+                
+                // If successful, update the HTML element with the specified ID
+                $('#billingTotal').text('Running Total : ' +response.billing_total );
+            } else {
+                // If there is an error, display an error message
+                $('#billingTotal').text('Error retrieving billing total: ' + response.message);
+            }
+        }).fail(function() {
+            // Handle network errors
+            $('#billingTotal').text('Network error while retrieving billing total.');
+        });
+    }
+
+    // Example usage: update the element with the ID "billingTotal"
+    updateBillingTotal();
+ const templateRegex = /\{\{\s*(\w+)\s*\}\}/g;
+
     $(document).ready(function() {
-        updateChatNames();
+        updateTopicNames();
+
+
+
+
+$('#Create').on('click', function() {
+    const templateString = $('#create_roomSystemMsg').val();
+    var roomName = $('#create_roomName').val();
+
+    $('#spinnerModal').modal('show');
+    if (roomName) {
+        $.post('/create_topic', {room_name: roomName,roomSystemMsg:templateString}, function(data) {
+            if (data.success) {
+                // Topic created successfully
+                // Perform any desired actions (e.g., show a success message, redirect to Topic)
+                updateTopicNames()
+                // Close the modal
+                $('#createTopicModal').modal('hide');
+                // Clear the input field
+                $('#create_roomName').val('');
+                $('#create_roomSystemMsg').val('');
+                currentRoom = roomName;
+                updateTopicHistory(); 
+                updateBillingTotal();
+                $('#topicForm').show();
+
+                $('#spinnerModal').modal('hide');
+            } else {
+                // Topic creation failed
+                // Show an error message
+                alert(data.message);
+            }
+        });
+    } else {
+        // Topic name is empty
+        // Show an error message
+        alert('Please enter a Topic name.');
+    }
+    $('#templateModal').modal('hide');
+});
+
+        
+
+
+
+  $('#template_submitBtn').on('click', function() {
+        const templateString = $('#create_roomSystemMsg').val();
+        // Get filled-in values from the form
+        const values = {};
+        $('#templateForm .form-control').each(function() {
+            const fieldId = $(this).attr('id');
+            const fieldValue = $(this).val();
+            values[fieldId] = fieldValue;
+        });
+
+        // Replace placeholders with values in the template string
+        const resultString = templateString.replace(templateRegex, (match, placeholder) => {
+            return values[placeholder] || match;
+        });
+
+        // Display the result and close the modal
+
+
+        $('#create_roomSystemMsg').val(resultString);
+        $('#templateModal').modal('hide');
+    });
 
      $('#sidebarToggle').on('click', function() {
                 // Toggle the 'active' class on the sidebar
@@ -318,14 +490,14 @@
         $('#archiveBtn').on('click', function() {
             var folderPath = $('#folderPath').val();
             if (folderPath) {
-                // Send request to server to archive chats
-                $.post('/archive_chats', {folder_path: folderPath}, function(data) {
+                // Send request to server to archive topics
+                $.post('/archive_topics', {folder_path: folderPath}, function(data) {
                     if (data.success) {
-                        // Successfully archived chats
+                        // Successfully archived topics
                         alert(data.message);
                         $('#archiveModal').modal('hide');
                     } else {
-                        // Failed to archive chats
+                        // Failed to archive topics
                         alert(data.message);
                     }
                 });
@@ -358,8 +530,36 @@
                 // Request file content from the Python back-end
                 $.get('/get_file_content', {filename: selectedFile}, function(data) {
                     if (data.success) {
+
+                        
                         // Set the file content to the textarea with ID 'create_roomSystemMsg'
-                        $('#create_roomSystemMsg').val(data.file_content);
+                        const templateString = data.file_content
+                        $('#create_roomSystemMsg').val(templateString);
+                        const matches = [...templateString.matchAll(templateRegex)];
+                        if (matches.length !== 0) {
+                            
+
+                            // Deduplicate placeholders using a Set
+                            const uniquePlaceholders = new Set(matches.map(match => match[1]));
+
+                            // Generate form fields for each unique placeholder
+                            const templateForm = $('#templateForm');
+                            templateForm.empty();
+                            uniquePlaceholders.forEach(placeholder => {
+                                const field = `
+                                    <div class="form-group">
+                                        <label for="${placeholder}">${placeholder}</label>
+                                        <input type="text" class="form-control" id="${placeholder}" placeholder="${placeholder}">
+                                    </div>
+                                `;
+                                templateForm.append(field);
+                            });
+
+                            // Show the modal
+                            $('#templateModal').modal('show');
+
+                        }
+
                         // Close the modal
                         $('#SystemTemplateModal').modal('hide');
                     } else {
@@ -370,91 +570,65 @@
                 alert('Please select a file.');
             }
         });
-        // Create or join chat room
-          $('#createRoomBtn').on('click', function() {
-            var roomName = $('#create_roomName').val();
-            var systemMsg = $('#create_roomSystemMsg').val();
-            if (roomName) {
-                $.post('/create_chat', {room_name: roomName,roomSystemMsg:systemMsg}, function(data) {
-                    if (data.success) {
-                        // Chat room created successfully
-                        // Perform any desired actions (e.g., show a success message, redirect to chat room)
-                        updateChatNames()
-                        // Close the modal
-                        $('#createChatModal').modal('hide');
-                        // Clear the input field
-                        $('#create_roomName').val('');
-                        $('#create_roomSystemMsg').val('');
-                        currentRoom = roomName;
-                        updateChatHistory(); 
-                        $('#chatForm').show();
-                    } else {
-                        // Chat room creation failed
-                        // Show an error message
-                        alert(data.message);
-                    }
-                });
-            } else {
-                // Chat room name is empty
-                // Show an error message
-                alert('Please enter a chat room name.');
-            }
-        });
-        // Delete a chat room
+        // Delete a Topic
         $('#deleteRoomBtn').on('click', function() {
-            $.post('/delete_chat', {room_name: window.roomToManage}, function(data) {
+            $.post('/delete_topic', {room_name: window.roomToManage}, function(data) {
                 if (data.success) {
-                    // Chat room deleted successfully
+                    // Topic deleted successfully
                     // Perform any desired actions
                     alert(data.message);
-                    updateChatNames()
-                    $('#manageChatModal').modal('hide');
+                    updateTopicNames()
+                    $('#manageTopicModal').modal('hide');
                     $('#roomName').val('');
-                    $('#chatForm').hide();
+                    $('#topicForm').hide();
+                    if (window.roomToManage == window.currentRoom ){
+                        $("#topicArea").empty()
+                    }
                 } else {
-                    // Chat room deletion failed
+                    // Topic deletion failed
                     alert(data.message);
                 }
             });
         });
         $("#renameRoomBtn").click(function(){
             event.preventDefault();
-            var newChatRoomName = $('#roomName').val();
-            if (newChatRoomName) {
-                // AJAX request to rename the chat room on the server
-                $.post('/rename_chat_room', {current_room_name: roomToManage, new_room_name: newChatRoomName}, function(data) {
+            var newTopicRoomName = $('#roomName').val();
+            if (newTopicRoomName) {
+                // AJAX request to rename the Topic on the server
+                $.post('/rename_topic_room', {current_room_name: roomToManage, new_room_name: newTopicRoomName}, function(data) {
                   if (data.success) {
-                    alert('Chat room renamed successfully!');
-                    currentRoom = newChatRoomName; // Update the current room name
-                    updateChatNames(); // Update the list of chat room names
-                    $('#manageChatModal').modal('hide');
+                    alert('Topic renamed successfully!');
+                    currentRoom = newTopicRoomName; // Update the current room name
+                    updateTopicNames(); // Update the list of Topic names
+                    $('#manageTopicModal').modal('hide');
                     $('#roomName').val('');
                   } else {
                     alert(data.message);
                   }
                 }); 
             } else {
-            alert('Please enter a new chat room name.');
+            alert('Please enter a new Topic name.');
             }
         });
       // Send message and get GPT response
-        $('#chatForm').on('submit', function(event) {
+        $('#topicForm').on('submit', function(event) {
             event.preventDefault();
             var userInput = $('#userInput').val();
             if (userInput) {
-                // Display user message in chat area
+                // Display user message in topic area
                 var messageID = 'msg-' + Date.now();
-                $('#chatArea').append('<div class="user-message" id="' + messageID + '"><strong>You:</strong> ' + userInput + ' <span class="delete-btn" data-message-id="' + messageID + '">[Delete]</span></div>');
+                $('#topicArea').append('<div class="user-message" id="' + messageID + '"><strong>You:</strong> <span class="delete-btn" data-message-id="' + messageID + '">[Delete]</span><br>'+userInput + '</div>');
                 $('#userInput').val('');
                 // Send message to server and get GPT response
-                $.post('/chat', {room_name: currentRoom, user_input: userInput}, function(data) {
+                $.post('/send_message', {room_name: currentRoom, user_input: userInput}, function(data) {
                     if (data.success) {
-                        // Display GPT response in chat area
+                        // Display GPT response in topic area
                         var responseID = 'msg-' + Date.now();
-                        var messageElem = '<strong class="pull-left">GPT:</strong> <div class="gpt-response" id="' + data.response_id + '"><span class="delete-btn pull-left" style="margin-left:15px;" data-message-id="' + data.response_id + '">[Delete]</span> <br>' + marked.parse(data.gpt_response) + '</div>';
-                        $('#chatArea').append(messageElem);
-                        // Scroll to the bottom of the chat area
-                        $('#chatArea').scrollTop($('#chatArea')[0].scrollHeight);
+                        var messageElem = '<div class="gpt-response" id="' + data.response_id + '"><strong class="pull-left">GPT:</strong> <span class="delete-btn pull-left" style="margin-left:15px;" data-message-id="' + data.response_id + '">[Delete]</span> <br>' + marked.parse(data.gpt_response) + '</div>';
+                        $('#topicArea').append(messageElem);
+                        // Scroll to the bottom of the topic area
+                        $('#topicArea').scrollTop($('#topicArea')[0].scrollHeight);
+                        updateBillingTotal('billingTotal');
                     } else {
                         alert(data.message);
                     }
