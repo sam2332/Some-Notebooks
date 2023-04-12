@@ -2,7 +2,8 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <title>Topic with GPT</title>
     <!-- Include Bootstrap 3 -->
@@ -10,10 +11,36 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <!-- Custom styles for the topic interface -->
     <style> 
+        :root {
+          touch-action: pan-x pan-y;
+          height: 100% 
+        }
+        .modal-dialog {
+          /* Set width to 100% for full-width modal on mobile */
+          
+          /* Set max-height to 100vh to ensure the modal doesn't exceed the screen height */
+          max-height: calc(100vh - 120px);
+          /* Set margin to 0 to remove any spacing */
 
+        }
+
+        .modal-content {
+          /* Set max-height to 100vh to ensure the modal doesn't exceed the screen height */
+          max-height: 100vh;
+          /* Set border-radius to 0 to remove rounded corners */
+          border-radius: 0;
+        }
+
+        .modal-body {
+          /* Set max-height to calc(100vh - header and footer height) to take full height */
+          max-height: calc(100vh - 182px); /* Adjust 120px based on the header and footer height */
+          overflow-y: auto; /* Enable scrolling if content overflows */
+        }
         .markdown-body table th, .markdown-body table td {
             padding: 6px 13px;
             border: 1px solid #d0d7de;
@@ -42,11 +69,11 @@
           background-color: transparent;
         }
 
-
         body {
             margin: 0;
             padding: 0;
             overflow-x: hidden; /* Prevent horizontal scrolling */
+            overscroll-behavior-y: contain;
         }
         .sidebar {
             position: fixed;
@@ -57,6 +84,10 @@
             padding: 20px;
             transform: translateX(-100%);
             transition: transform 0.3s ease-in-out;
+            user-select: none;  /* Standard syntax */
+            -webkit-user-select: none;  /* Chrome, Safari, and Opera */
+            -moz-user-select: none;  /* Firefox */
+            -ms-user-select: none;  /* Internet Explorer and Edge */
         }
         .sidebar.active {
             transform: translateX(0);
@@ -115,25 +146,26 @@
             margin-right: 10px;
             max-width: 236px;
         }
-        .topic-container {
-            flex: 2;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-        }
         .topic-area {
-            height: calc(100vh - 100px);
+            height: calc(100vh - 183px);
             overflow-y: auto;
             border: 1px solid #ccc;
+
+            padding-bottom: 50px;
             padding: 0px;
             margin-bottom: 10px;
         }
         .topic-container {
             position: relative;
             padding: 20px;
-            height: 100vh; /* Set topic container height to 100% of viewport height */
+            height:calc(100vh - 57px); /* Set topic container height to 100% of viewport height */
             box-sizing: border-box; /* Include padding in the total height */
+       
+            flex: 2;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
         }
         .topic-area {
             overflow-y: auto;
@@ -160,10 +192,13 @@
             cursor: pointer;
             color: red;
         }
+        #topicName{
+            display: inline;
+        }
     </style>
 </head>
 <body>   
- <div class="wrapper">
+    <div class="wrapper">
         <!-- Sidebar with topic names -->
         <div class="sidebar active" id='sidebar'>
             <h4>
@@ -176,89 +211,119 @@
         </div>
         <!-- Topic area and input field for user message -->
         <div class="topic-container slide" id="main-content">
-        <i class="fa fa-bars hamburger" id="sidebarToggle"></i>
-        <span id='billingTotal'></span>
+        <h3 id='topicName'></h3>
+        <span class='pull-right'>
+             <div class="dropdown">
+      <!-- Create the trigger button with three dots -->
+      <button class="btn btn-default dropdown-toggle ellipsis" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+        ...
+      </button>
+      <!-- Define the dropdown menu items -->
+      <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu1">
+        <li><a id="sidebarToggle" href="#">Toggle Sidebar</a></li>
+        <li><a href="#" id='exportPdf'>Export Pdf</a></li>
+        <li role="separator" class="divider"></li>
+        <li><a href="#" id='deleteTopicBtn'>Delete</a></li>
+      </ul>
+    </div>
+        </span>
+        <div id='billingTotal'></div>
+
 
 
         
         <!-- Topic area and input field for user message -->
         <div class="topic-area" id="topicArea"></div>
-        <form id="topicForm" style="display:none;" >
-            <div class="input-group">
-                <span class="input-group-btn">
-                    <button type="button" class="btn btn-secondary" id='microphone'><i class="fa fa-microphone" style="color:red"></i></button>
-                </span>
-                <input type="text" class="form-control" id="userInput" autocomplete="off" placeholder="Type your message here...">
-                <span class="input-group-btn">
-                    <input class="btn btn-primary" type="submit" value="Send"/>
-                </span>
-            </div>
-        </form>
+            <form id="topicForm" style="display:none;" >
+                <div class="input-group">
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-secondary" id='microphone'><i class="fa fa-microphone" style="color:red"></i></button>
+                    </span>
+                    <input type="text" class="form-control" id="userInput" autocomplete="off" placeholder="Type your message here...">
+                    <span class="input-group-btn">
+                        <input class="btn btn-primary" type="submit" value="Send"/>
+                    </span>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-<div class="modal fade" id="manageTopicModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Manage Topic</h4>
-            </div>
-            <div class="modal-body">
-                <form id="roomForm" onkeydown="return event.key != 'Enter';">
-                    <div class="form-group">
-                        <label for="roomName">Topic Name</label>
-                        <input type="text" class="form-control" id="roomName" placeholder="Enter Topic name...">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="renameRoomBtn">Rename</button>
-                <button type="button" class="btn btn-danger" id="deleteRoomBtn">Delete</button>
+
+    <div class="modal fade" id="manageTopicModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Manage Topic</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="topicForm" onkeydown="return event.key != 'Enter';">
+                        <div class="form-group">
+                            <label for="manage_topicName">Topic Name</label>
+                            <input type="text" class="form-control" id="manage_topicName" placeholder="Auto Generated if Blank.">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="renameTopicBtn">Rename</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 
 
     
     <!-- Modal for creating a new Topic -->
-<div class="modal fade" id="createTopicModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title">Create Topic</h4>
-            </div>
-            <div class="modal-body">
-                <form id="roomForm" >
-                    <div class="form-group">
-                        <label for="create_roomName">Topic Name</label>
-                        <input type="text" class="form-control" id="create_roomName" placeholder="Enter Topic name..." onkeydown="return event.key != 'Enter';">
+    <div class="modal fade" id="createTopicModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Create Topic</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="topicForm" >
+                        <div class="form-group">
+                            <label for="create_topicName">Topic Name</label>
+                            <input type="text" class="form-control" id="create_topicName" placeholder="Leave Blank To AutoGpt" onkeydown="return event.key != 'Enter';">
+                        </div>
+                        <div class="form-group">
+                        <label for="modelSelection">Model Selection</label>
+                        <select class="form-control" id="create_modelSelection">
+                            <optgroup label="Chat Models">
+                                <option value="gpt-3.5-turbo">gpt-3.5-turbo</option> 
+                            </optgroup>
+                            <optgroup label="Text Models">
+                                <option value="text-davinci-003">text-davinci-003</option>
+                                <option value="text-curie-001">text-curie-001</option>
+                                <option value="text-ada-001">text-ada-001</option>
+                            </optgroup>
+                       
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label for="roomName">Topic System Prompt Template</label>
-                        <div class="textarea-container">
-                            <textarea  class="form-control custom-textarea" id="create_roomSystemMsg"></textarea>
-                            <div class="float-button">
-                                <a  data-toggle="modal" data-target="#SystemTemplateModal">Load Template</a>
+                        <div class="form-group">
+                            <label for="topicName">Topic System Prompt Template</label>
+                            <div class="textarea-container">
+                                <textarea rows="15" class="form-control custom-textarea" id="create_topicSystemMsg"></textarea>
+                                <div class="float-button">
+                                    <a  data-toggle="modal" data-target="#SystemTemplateModal">Load Template</a>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="Create">Create</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="Create">Create</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <!-- Modal for displaying the dropdown with folder contents -->
 <div class="modal fade" id="SystemTemplateModal" tabindex="-1" role="dialog">
@@ -314,10 +379,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-body text-center">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="sr-only">Loading...</span>
-                    </div>
-                    <p>Loading...</p>
+                    Loading, Please Wait ...
                 </div>
             </div>
         </div>
@@ -330,8 +392,13 @@
 
     marked.setOptions({ sanitize: true})
 
-    var currentRoom = null;
-    var roomToManage = null;
+    var currentTopic = window.localStorage['currentTopic'] ;
+    if (currentTopic){
+        updateTopicHistory()
+        $('#topicName').text(currentTopic)
+        $('#topicForm').show();
+    }
+    var topicToManage = null;
     
     function formatCurrency(value, currencyCode) {
       // Create a NumberFormat object with currency formatting options
@@ -342,6 +409,8 @@
       // Format the value as currency
       return formatter.format(value);
     }
+
+
     function updateTopicNames() {
         $.get('/get_topic_names', function(data) {
             if (data.success) {
@@ -349,17 +418,19 @@
                 data.topic_names.forEach(function(topicName) {
                     var listItem = $('<li>').text(topicName);
                     listItem.on('click', function() {
-                        currentRoom = topicName;
+                        currentTopic = topicName;
+                        window.localStorage['currentTopic'] = currentTopic
+                        $('#topicName').text(currentTopic)
                         
                         updateBillingTotal()
-                        updateTopicHistory();  // Fetch and update topic history for the selected room
+                        updateTopicHistory();  // Fetch and update topic history for the selected topic
                         $('#topicForm').show();
                     });
 
                      listItem.on('contextmenu', function(event) {
                         event.preventDefault();  // Prevent the default context menu from appearing
-                        roomToManage = topicName;  // Store the Topic to be renamed
-                        $('#roomName').val(roomToManage);
+                        topicToManage = topicName;  // Store the Topic to be renamed
+                        $('#manage_topicName').val(topicToManage);
 
                         $('#manageTopicModal').modal('show');  // Show the rename modal
                     });
@@ -368,11 +439,35 @@
             }
         });
     }
+    setInterval(updateTopicNames,60*1000)
+    const stopWords = [
+  'a', 'about', 'above', 'after', 'of','again', 'against', 'all', 'am', 'an', 'and',
+  'any', 'are', 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below',
+  'between', 'both', 'but', 'by', 'can', 'did', 'do', 'does', 'doing', 'down',
+  'during', 'each', 'few', 'for', 'from', 'further', 'had', 'has', 'have', 'having',
+  'he', 'her', 'here', 'hers', 'herself', 'him', 'himself', 'his', 'how', 'i'
+];
+    function toTitleCase(underscoreSeparated) {
+      // Split the string into individual words based on underscores
+      const words = underscoreSeparated.split('_');
 
-    // Function to fetch and update topic history for the current room
+      // Capitalize the first letter of each word (unless it's a stop word) and join with spaces
+      const titleCased = words.map((word, index) => {
+        // If the word is a stop word and it's not the first word, make it lowercase
+        if (stopWords.includes(word.toLowerCase()) && index !== 0) {
+          return word.toLowerCase();
+        }
+        // Otherwise, capitalize the first letter and make the rest lowercase
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      }).join(' ');
+
+      // Return the final title-cased string
+      return titleCased;
+    }
+    // Function to fetch and update topic history for the current topic
     function updateTopicHistory() {
-        if (currentRoom) {
-            $.get('/get_topic_info', {room_name: currentRoom}, function(data) {
+        if (currentTopic) {
+            $.get('/get_topic_info', {topic_name: currentTopic}, function(data) {
                 $('#topicArea').empty();
                 if (data.success) {
                     data.topic_history.messages.forEach(function(message) {
@@ -390,15 +485,17 @@
             });
         }
     }
+    setInterval(updateTopicHistory,30*1000)
 
 
     function updateBillingTotal() {
+        if (currentTopic) {
         // Send a request to the Flask route to get the billing total
-        $.get('/get_billing_total', {room_name: window.currentRoom}, function(response) {
+        $.get('/get_billing_total', {topic_name: window.currentTopic}, function(response) {
             if (response.success) {
                 
                 // If successful, update the HTML element with the specified ID
-                $('#billingTotal').text('Running Total : ' +response.billing_total );
+                $('#billingTotal').text('Topic Total : ' +response.billing_total );
             } else {
                 // If there is an error, display an error message
                 $('#billingTotal').text('Error retrieving billing total: ' + response.message);
@@ -408,6 +505,36 @@
             $('#billingTotal').text('Network error while retrieving billing total.');
         });
     }
+    }
+function makeSafeFileName(title) {
+  return title.replace(/[^\w\s]/gi, '_');
+}
+function generateTopicName(resultString) {
+  return new Promise((resolve, reject) => {
+    $.ajax({
+      url: '/gpt',
+      method: 'POST',
+      data: {
+        user_text: resultString,
+        task_description: "Please read this and create a title that is unique and will convey important information. 5 words or less"
+      },
+      success: function(response) {
+        if (response.success) {
+          // Resolve the promise with the edited text
+          resolve(response.output);
+        } else {
+          // Reject the promise with an error message
+          reject('Error: ' + response.message);
+        }
+      },
+      error: function() {
+        // Reject the promise with a network error message
+        reject('Network error while editing text.');
+      }
+    });
+  });
+}
+
 
     // Example usage: update the element with the ID "billingTotal"
     updateBillingTotal();
@@ -418,49 +545,53 @@
 
 
 
-
-$('#Create').on('click', function() {
-    const templateString = $('#create_roomSystemMsg').val();
-    var roomName = $('#create_roomName').val();
-
+$('#Create').on('click', async function() {
+    var templateString = $('#create_topicSystemMsg').val();
+    var topicName = $('#create_topicName').val();
+    var modelSelection = $('#create_modelSelection').val();
     $('#spinnerModal').modal('show');
-    if (roomName) {
-        $.post('/create_topic', {room_name: roomName,roomSystemMsg:templateString}, function(data) {
+    $('#createTopicModal').modal('hide');
+    if (!topicName){
+      topicName = await generateTopicName(templateString);
+    }
+    if (topicName) {
+        $.post('/create_topic', {topic_name: topicName,modelSelection:modelSelection,topicSystemMsg:templateString}, function(data) {
+            $('#spinnerModal').modal('hide')
             if (data.success) {
                 // Topic created successfully
                 // Perform any desired actions (e.g., show a success message, redirect to Topic)
                 updateTopicNames()
                 // Close the modal
-                $('#createTopicModal').modal('hide');
                 // Clear the input field
-                $('#create_roomName').val('');
-                $('#create_roomSystemMsg').val('');
-                currentRoom = roomName;
+                $('#create_topicName').val('');
+                $('#create_topicSystemMsg').val('');
+                currentTopic = topicName;
+                window.localStorage['currentTopic'] = currentTopic
+                $('#topicName').text(currentTopic)
                 updateTopicHistory(); 
                 updateBillingTotal();
                 $('#topicForm').show();
 
-                $('#spinnerModal').modal('hide');
             } else {
                 // Topic creation failed
                 // Show an error message
                 alert(data.message);
+                $('#createTopicModal').modal('show');
             }
         });
     } else {
         // Topic name is empty
         // Show an error message
+        $('#spinnerModal').modal('hide');
+        $('#createTopicModal').modal('show');
         alert('Please enter a Topic name.');
     }
-    $('#templateModal').modal('hide');
 });
 
         
 
-
-
   $('#template_submitBtn').on('click', function() {
-        const templateString = $('#create_roomSystemMsg').val();
+        const templateString = $('#create_topicSystemMsg').val();
         // Get filled-in values from the form
         const values = {};
         $('#templateForm .form-control').each(function() {
@@ -473,56 +604,36 @@ $('#Create').on('click', function() {
         const resultString = templateString.replace(templateRegex, (match, placeholder) => {
             return values[placeholder] || match;
         });
-
         // Display the result and close the modal
-
-
-        $('#create_roomSystemMsg').val(resultString);
+        
+        $('#create_topicSystemMsg').val(resultString);
         $('#templateModal').modal('hide');
     });
 
      $('#sidebarToggle').on('click', function() {
-                // Toggle the 'active' class on the sidebar
-                $('#sidebar').toggleClass('active');
-                // Toggle the 'slide' class on the main content
-                $('#main-content').toggleClass('slide');
-            });
-        $('#archiveBtn').on('click', function() {
-            var folderPath = $('#folderPath').val();
-            if (folderPath) {
-                // Send request to server to archive topics
-                $.post('/archive_topics', {folder_path: folderPath}, function(data) {
-                    if (data.success) {
-                        // Successfully archived topics
-                        alert(data.message);
-                        $('#archiveModal').modal('hide');
-                    } else {
-                        // Failed to archive topics
-                        alert(data.message);
-                    }
+        // Toggle the 'active' class on the sidebar
+        $('#sidebar').toggleClass('active');
+        // Toggle the 'slide' class on the main content
+        $('#main-content').toggleClass('slide');
+    });
+
+
+    $('#SystemTemplateModal').on('show.bs.modal', function() {
+        // Request folder contents from the Python back-end
+        $.get('/get_folder_contents', function(data) {
+            if (data.success) {
+                // Populate the dropdown options
+                var fileDropdown = $('#fileDropdown');
+                fileDropdown.empty();
+                data.folder_contents.forEach(function(file) {
+                    fileDropdown.append('<option value="' + file + '">' + file + '</option>');
                 });
             } else {
-                alert('Please enter a folder path.');
+                alert(data.message);
             }
         });
-
-
-        $('#SystemTemplateModal').on('show.bs.modal', function() {
-                // Request folder contents from the Python back-end
-                $.get('/get_folder_contents', function(data) {
-                    if (data.success) {
-                        // Populate the dropdown options
-                        var fileDropdown = $('#fileDropdown');
-                        fileDropdown.empty();
-                        data.folder_contents.forEach(function(file) {
-                            fileDropdown.append('<option value="' + file + '">' + file + '</option>');
-                        });
-                    } else {
-                        alert(data.message);
-                    }
-                });
-            });
- // Load the file content and set it to the textarea
+    });
+    // Load the file content and set it to the textarea
         $('#selectFileBtn').on('click', function() {
             // Get the selected filename from the dropdown
             var selectedFile = $('#fileDropdown').val();
@@ -532,9 +643,9 @@ $('#Create').on('click', function() {
                     if (data.success) {
 
                         
-                        // Set the file content to the textarea with ID 'create_roomSystemMsg'
+                        // Set the file content to the textarea with ID 'create_topicSystemMsg'
                         const templateString = data.file_content
-                        $('#create_roomSystemMsg').val(templateString);
+                        $('#create_topicSystemMsg').val(templateString);
                         const matches = [...templateString.matchAll(templateRegex)];
                         if (matches.length !== 0) {
                             
@@ -546,10 +657,11 @@ $('#Create').on('click', function() {
                             const templateForm = $('#templateForm');
                             templateForm.empty();
                             uniquePlaceholders.forEach(placeholder => {
+                                let title = toTitleCase(placeholder)
                                 const field = `
                                     <div class="form-group">
-                                        <label for="${placeholder}">${placeholder}</label>
-                                        <input type="text" class="form-control" id="${placeholder}" placeholder="${placeholder}">
+                                        <label for="${placeholder}">${title}</label>
+                                        <input type="text" class="form-control" id="${placeholder}">
                                     </div>
                                 `;
                                 templateForm.append(field);
@@ -570,18 +682,18 @@ $('#Create').on('click', function() {
                 alert('Please select a file.');
             }
         });
+      
         // Delete a Topic
-        $('#deleteRoomBtn').on('click', function() {
-            $.post('/delete_topic', {room_name: window.roomToManage}, function(data) {
+        $('#deleteTopicBtn').on('click', function() {
+            $.post('/delete_topic', {topic_name: window.currentTopic}, function(data) {
                 if (data.success) {
                     // Topic deleted successfully
                     // Perform any desired actions
-                    alert(data.message);
                     updateTopicNames()
                     $('#manageTopicModal').modal('hide');
-                    $('#roomName').val('');
+                    $('#topicName').val('');
                     $('#topicForm').hide();
-                    if (window.roomToManage == window.currentRoom ){
+                    if (window.topicToManage == window.currentTopic ){
                         $("#topicArea").empty()
                     }
                 } else {
@@ -590,18 +702,20 @@ $('#Create').on('click', function() {
                 }
             });
         });
-        $("#renameRoomBtn").click(function(){
+        $("#renameTopicBtn").click(function(){
             event.preventDefault();
-            var newTopicRoomName = $('#roomName').val();
-            if (newTopicRoomName) {
+            var newTopicTopicName = $('#manage_topicName').val();
+            if (newTopicTopicName) {
                 // AJAX request to rename the Topic on the server
-                $.post('/rename_topic_room', {current_room_name: roomToManage, new_room_name: newTopicRoomName}, function(data) {
+                $.post('/rename_topic_topic', {current_topic_name: topicToManage, new_topic_name: newTopicTopicName}, function(data) {
                   if (data.success) {
                     alert('Topic renamed successfully!');
-                    currentRoom = newTopicRoomName; // Update the current room name
+                    currentTopic = newTopicTopicName; // Update the current topic name
+                    window.localStorage['currentTopic'] = currentTopic
+                    $('#topicName').text(currentTopic)
                     updateTopicNames(); // Update the list of Topic names
                     $('#manageTopicModal').modal('hide');
-                    $('#roomName').val('');
+                    $('#manage_topicName').val('');
                   } else {
                     alert(data.message);
                   }
@@ -619,8 +733,9 @@ $('#Create').on('click', function() {
                 var messageID = 'msg-' + Date.now();
                 $('#topicArea').append('<div class="user-message" id="' + messageID + '"><strong>You:</strong> <span class="delete-btn" data-message-id="' + messageID + '">[Delete]</span><br>'+userInput + '</div>');
                 $('#userInput').val('');
+                $('#topicArea').scrollTop($('#topicArea')[0].scrollHeight);
                 // Send message to server and get GPT response
-                $.post('/send_message', {room_name: currentRoom, user_input: userInput}, function(data) {
+                $.post('/send_message', {topic_name: currentTopic, user_input: userInput}, function(data) {
                     if (data.success) {
                         // Display GPT response in topic area
                         var responseID = 'msg-' + Date.now();
@@ -641,7 +756,7 @@ $('#Create').on('click', function() {
             var messageID = $(this).attr('data-message-id');
             $('#' + messageID).remove();
             // Send request to server to delete message
-            $.post('/delete_message', {room_name: currentRoom, message_id: messageID}, function(data) {
+            $.post('/delete_message', {topic_name: currentTopic, message_id: messageID}, function(data) {
                 if (!data.success) {
                     alert(data.message);
                 }
