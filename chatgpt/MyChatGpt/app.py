@@ -6,6 +6,7 @@ import jsonpickle
 import os
 from pathlib import Path
 from flask_cors import CORS
+import webview
 
 
 save_location = Path("DB.JsonPickle")
@@ -31,6 +32,7 @@ def convertMessagesToGPTFormat(a):
         if "system" in item:
             msg.append({"role": "system", "content": item["system"]})
     return msg
+
 def convertMessagesToCompletion(a):
     return f"""
         {a[0]['system']}\n\nInput: {a[-1]['user']}\n\nOutput:
@@ -290,24 +292,18 @@ def gpt():
     if not user_text or not task_description:
         return jsonify({'success': False, 'message': 'User text and task description are required.'})
 
-    try:
-        # Construct the prompt for the editing task
-        prompt = f"{task_description}\n\nInput: {user_text}\n\nOutput:"
-        
-        # Use the GPT-3 "text-davinci-edit-001" engine to complete the editing task
-        response = openai.Completion.create(
-          model="text-davinci-003",
-          prompt=prompt,
-          max_tokens=100,
-          temperature=1
-        )
-
-        # Extract the generated text from the API response
-        return_text = response.get('choices', [{}])[0].get('text', '').strip()
+    try:        
+        tmp_room = {}
+        tmp_room["messages"] = [
+            {"system": task_description},
+            {"user": user_text}
+        ]
+        tmp_room["meta"] = {'tokens_spent':0,"model":"gpt-3.5-turbo"}
+        response = generate_gpt_response(tmp_room)
 
         return jsonify({
             'success': True,
-            'output': return_text.strip('"')
+            'output': response.strip('"')
         })
     except Exception as e:
         return jsonify({
@@ -316,13 +312,7 @@ def gpt():
         })
 
 
-# Run the Flask application
-if __name__ == "__main__":
-    import random, threading, webbrowser
 
+if __name__ == '__main__':
     port = 5002
-    url = "https://127.0.0.1:{0}".format(port)
-
-    #threading.Timer(1.25, lambda: webbrowser.open(url) ).start()
-
     app.run(debug=True,host='0.0.0.0',port=port,ssl_context=('cert.pem', 'key.pem'))

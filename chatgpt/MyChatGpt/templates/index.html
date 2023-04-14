@@ -392,7 +392,7 @@
 
         marked.setOptions({ sanitize: true})
 
-        var currentTopic = window.localStorage['currentTopic'] ;
+        var currentTopic = '';
         if (currentTopic){
             updateTopicHistory()
             $('#topicName').text(currentTopic)
@@ -419,7 +419,6 @@
                         var listItem = $('<li>').text(topicName);
                         listItem.on('click', function() {
                             currentTopic = topicName;
-                            window.localStorage['currentTopic'] = currentTopic
                             $('#topicName').text(currentTopic)
                             
                             updateBillingTotal()
@@ -566,7 +565,6 @@
                     $('#create_topicName').val('');
                     $('#create_topicSystemMsg').val('');
                     currentTopic = topicName;
-                    window.localStorage['currentTopic'] = currentTopic
                     $('#topicName').text(currentTopic)
                     updateTopicHistory(); 
                     updateBillingTotal();
@@ -711,7 +709,6 @@
                       if (data.success) {
                         alert('Topic renamed successfully!');
                         currentTopic = newTopicTopicName; // Update the current topic name
-                        window.localStorage['currentTopic'] = currentTopic
                         $('#topicName').text(currentTopic)
                         updateTopicNames(); // Update the list of Topic names
                         $('#manageTopicModal').modal('hide');
