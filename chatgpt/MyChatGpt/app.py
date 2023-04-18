@@ -9,14 +9,26 @@ from flask_cors import CORS
 import webview
 
 
+def save_config(name,data):
+    Path(name).write_text(jsonpickle.encode(data,indent=4))
+
+
+def load_config(name):
+    p=Path(name)
+    if p.exists() == False:
+        return {}
+    return jsonpickle.decode(p.read_text())
+
 save_location = Path("DB.JsonPickle")
+system_info = load_config("System.JsonPickle")
+if len(system_info.keys()) ==0:
+    system_info['total_tokens'] = 0
+save_config("System.JsonPickle",system_info)
+def save_topics(topictopics):
+    save_location.write_text(jsonpickle.encode(topictopics,indent=4))
 
 
-def save_topic_topics(topictopics):
-    save_location.write_text(jsonpickle.encode(topictopics))
-
-
-def load_topic_topics():
+def load_topics():
     if save_location.exists() == False:
         return {}
     return jsonpickle.decode(save_location.read_text())
@@ -50,6 +62,10 @@ def generate_gpt_response(topic_topic):
         topic_topic["meta"]["tokens_spent"] += response["usage"][
             "total_tokens"
         ]
+        system_info['total_tokens'] += response["usage"][
+            "total_tokens"
+        ]
+        save_config("System.JsonPickle",system_info)
         return response["choices"][0]["message"]["content"]
     else:
         if len(topic_topic["messages"]) >1: 
@@ -62,6 +78,11 @@ def generate_gpt_response(topic_topic):
             topic_topic["meta"]["tokens_spent"] += response["usage"][
                 "total_tokens"
             ]
+
+            system_info['total_tokens'] += response["usage"][
+                "total_tokens"
+            ]
+            save_config("System.JsonPickle",system_info)
             return response["choices"][0]["text"]
         return None
 
@@ -87,7 +108,7 @@ system_templates_folder_path = "SystemTemplates"
 archive_folder_path = "Archives"
 
 # Initialize Topics dictionary
-topic_topics = load_topic_topics()
+topic_topics = load_topics()
 
 
 @app.route("/get_topic_names", methods=["GET"])
@@ -152,7 +173,7 @@ def create_topic():
                 topic_topics[topic_name]["messages"].append(
                     {"id": response_id, "gpt": gpt_response}
                 )
-        save_topic_topics(topic_topics)
+        save_topics(topic_topics)
         return jsonify({"success": True, "message": "Topic created."})
     else:
         return jsonify({"success": False, "message": "Topic already exists."})
@@ -164,7 +185,7 @@ def delete_topic():
     topic_name = request.form.get("topic_name")
     if topic_name in topic_topics:
         del topic_topics[topic_name]
-        save_topic_topics(topic_topics)
+        save_topics(topic_topics)
         return jsonify({"success": True, "message": "Topic deleted."})
     else:
         return jsonify({"success": False, "message": "Topic not found."})
@@ -227,7 +248,7 @@ def rename_topic_topic():
         # Rename the Topic by reassigning the topic history
         topic_topics[new_topic_name] = topic_topics[current_topic_name]
         del topic_topics[current_topic_name]
-        save_topic_topics(topic_topics)
+        save_topics(topic_topics)
 
         return jsonify({"success": True, "message": "Topic renamed successfully."})
     else:
@@ -255,7 +276,7 @@ def send_message():
         topic_topics[topic_name]["messages"].append(
             {"id": response_id, "gpt": gpt_response}
         )
-        save_topic_topics(topic_topics)
+        save_topics(topic_topics)
         return jsonify(
             {
                 "success": True,
@@ -277,7 +298,7 @@ def delete_message():
         topic_topics[topic_name]["messages"] = [
             msg for msg in topic_topics[topic_name]["messages"] if msg["id"] != message_id
         ]
-        save_topic_topics(topic_topics)
+        save_topics(topic_topics)
         return jsonify({"success": True, "message": "Message deleted."})
     else:
         return jsonify({"success": False, "message": "Topic not found."})
@@ -300,6 +321,9 @@ def gpt():
         ]
         tmp_room["meta"] = {'tokens_spent':0,"model":"gpt-3.5-turbo"}
         response = generate_gpt_response(tmp_room)
+
+
+        
 
         return jsonify({
             'success': True,
