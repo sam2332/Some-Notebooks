@@ -323,7 +323,7 @@ def gpt():
         response = generate_gpt_response(tmp_room)
 
 
-        
+        print(tmp_room["meta"]["tokens_spent"],"tokens spent")
 
         return jsonify({
             'success': True,
