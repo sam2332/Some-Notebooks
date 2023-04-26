@@ -6,7 +6,6 @@ import jsonpickle
 import os
 from pathlib import Path
 from flask_cors import CORS
-import webview
 
 
 def save_config(name,data):

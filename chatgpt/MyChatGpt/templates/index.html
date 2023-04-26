@@ -12,7 +12,8 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  
 
     <!-- Custom styles for the topic interface -->
     <style> 
@@ -389,11 +390,58 @@
 
 
     <script>
+	$("#exportPdf").click(function() {
+	var ol = $(".topic-area").css('height')
+	$(".topic-area").css('height','auto')
+  var HTML_Width = $(".topic-area").width();
+  var HTML_Height = $(".topic-area")[0].scrollHeight;
+  var top_left_margin = 15;
+  var PDF_Width = HTML_Width + (top_left_margin * 2);
+  var PDF_Height = PDF_Width * 1.5;
+  var canvas_image_width = HTML_Width;
+  var canvas_image_height = HTML_Height;
 
+  html2canvas($(".topic-area")[0]).then(function(canvas) {
+    var imgData = canvas.toDataURL("image/jpeg", 1.0);
+    var pdf = new jspdf.jsPDF("p", "pt", [PDF_Width, PDF_Height]);
+
+    pdf.addImage(imgData, "JPG", top_left_margin, top_left_margin, canvas_image_width, canvas_image_height);
+
+    pdf.save(encodeURIComponent(window.currentTopic)+".pdf");
+	 $(".topic-area").css('height',ol)
+  });
+});
+
+// Function to set a cookie
+function setCookie(key, value, expirationDays) {
+  const date = new Date();
+  date.setTime(date.getTime() + (expirationDays * 24 * 60 * 60 * 1000));
+  const expires = "expires=" + date.toUTCString();
+  document.cookie = key + "=" + value + ";" + expires + ";path=/";
+}
+
+// Function to get a cookie value
+function getCookie(key) {
+  const name = key + "=";
+  const decodedCookie = decodeURIComponent(document.cookie);
+  const cookieArray = decodedCookie.split(";");
+
+  for (let i = 0; i < cookieArray.length; i++) {
+    let cookie = cookieArray[i];
+    while (cookie.charAt(0) === " ") {
+      cookie = cookie.substring(1);
+    }
+    if (cookie.indexOf(name) === 0) {
+      return cookie.substring(name.length, cookie.length);
+    }
+  }
+
+  return "";
+}
 
         marked.setOptions({ sanitize: true})
 
-        var currentTopic = '';
+        var currentTopic = getCookie("LastTopic");
         if (currentTopic){
             updateTopicHistory()
             $('#topicName').text(currentTopic)
@@ -420,6 +468,8 @@
                         var listItem = $('<li>').text(topicName);
                         listItem.on('click', function() {
                             currentTopic = topicName;
+							
+							setCookie("LastTopic",window.currentTopic,90)
                             $('#topicName').text(currentTopic)
                             
                             updateBillingTotal()
@@ -558,6 +608,8 @@
                     $('#create_topicName').val('');
                     $('#create_topicSystemMsg').val('');
                     currentTopic = topicName;
+					
+					setCookie("LastTopic",window.currentTopic,90)
                     $('#topicName').text(currentTopic)
                     updateTopicHistory(); 
                     updateBillingTotal();
@@ -707,6 +759,8 @@
                       if (data.success) {
                         alert('Topic renamed successfully!');
                         currentTopic = newTopicTopicName; // Update the current topic name
+						
+						setCookie("LastTopic",window.currentTopic,90)
                         $('#topicName').text(currentTopic)
                         updateTopicNames(); // Update the list of Topic names
                         $('#manageTopicModal').modal('hide');
