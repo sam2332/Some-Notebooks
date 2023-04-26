@@ -1,52 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title>Profile - Manage your user profile and preferences</title>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<!-- Bootstrap CSS -->
+	<title>Profile - ChatHub</title>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-	<!-- jQuery library -->
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-	<!-- Popper JS -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-	<!-- Bootstrap JS -->
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </head>
 <body>
-	<!-- Navigation bar -->
 	<nav class="navbar navbar-expand-md bg-dark navbar-dark">
-	  <!-- Logo -->
-	  <a class="navbar-brand" href="#">My Webapp</a>
-	  <!-- Navigation menu items -->
-	  <ul class="navbar-nav">
-	    <li class="nav-item">
-	      <a class="nav-link" href="#">Home</a>
-	    </li>
-	    <li class="nav-item">
-	      <a class="nav-link" href="#">About</a>
-	    </li>
-	    <li class="nav-item active">
-	      <a class="nav-link" href="#">Profile</a>
-	    </li>
-	    <li class="nav-item">
-	      <a class="nav-link" href="#">Chat Room</a>
-	    </li>
-	  </ul>
+		<!-- Brand -->
+		<a class="navbar-brand" href="#">ChatHub</a>
+
+		<!-- Toggler/collapsible Button -->
+		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+
+		<!-- Navbar links -->
+		<div class="collapse navbar-collapse" id="collapsibleNavbar">
+			<ul class="navbar-nav">
+				<li class="nav-item">
+					<a class="nav-link" href="index.html">Home</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="about.html">About</a>
+				</li>
+				<li class="nav-item active">
+					<a class="nav-link" href="#">Profile</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="chatroom.html">Chat Room</a>
+				</li>
+			</ul>
+		</div>
 	</nav>
 
-	<!-- Page content -->
-	<div class="container mt-3">
+	<div class="container mt-4">
 		<h1>Profile</h1>
-		<p>Manage your user profile and preferences</p>
 		<hr>
-		<h2>Features</h2>
-		<ul>
-			<li>View and Edit profile information</li>
- 			<li>View messages and conversations</li>
- 			<li>Manage chat room preferences</li>
-		</ul>
+		<div class="row">
+			<div class="col-md-4">
+				<img src="https://via.placeholder.com/150" class="img-thumbnail">
+			</div>
+			<div class="col-md-8">
+				<h3>John Doe</h3>
+				<p>Reputation score: 500</p>
+				<h5>About Me</h5>
+				<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla scelerisque, est ut volutpat dapibus, urna dui fermentum leo, eu luctus magna justo a diam. Aliquam imperdiet metus eu enim pharetra eleifend. Maecenas in finibus augue.</p>
+				<h5>Profile Settings</h5>
+				<p>Background Image: <input type="file"></p>
+			</div>
+		</div>
 	</div>
 
+	<footer class="bg-dark text-white mt-4 pt-2 pb-2">
+		<div class="container">
+			<p>&copy; 2021 ChatHub</p>
+		</div>
+	</footer>
 </body>
 </html>

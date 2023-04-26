@@ -211,7 +211,7 @@
         </div>
         <!-- Topic area and input field for user message -->
         <div class="topic-container slide" id="main-content">
-        <h3 id='topicName'></h3>
+        <h3 id='topicName'>No Topic Open</h3>
         <span class='pull-right'>
              <div class="dropdown">
       <!-- Create the trigger button with three dots -->
@@ -223,6 +223,7 @@
         <li><a id="sidebarToggle" href="#">Toggle Sidebar</a></li>
         <li><a href="#" id='exportPdf'>Export Pdf</a></li>
         <li role="separator" class="divider"></li>
+        <li><a href="#" id='OpenRenameTopicBtn'>Rename</a></li>
         <li><a href="#" id='deleteTopicBtn'>Delete</a></li>
       </ul>
     </div>
@@ -425,14 +426,6 @@
                             updateTopicHistory();  // Fetch and update topic history for the selected topic
                             $('#topicForm').show();
                         });
-
-                         listItem.on('contextmenu', function(event) {
-                            event.preventDefault();  // Prevent the default context menu from appearing
-                            topicToManage = topicName;  // Store the Topic to be renamed
-                            $('#manage_topicName').val(topicToManage);
-
-                            $('#manageTopicModal').modal('show');  // Show the rename modal
-                        });
                         $('#topicNamesList').append(listItem);
                     });
                 }
@@ -585,7 +578,7 @@
             alert('Please enter a Topic name.');
         }
     });
-
+7
             
 
       $('#template_submitBtn').on('click', function() {
@@ -631,6 +624,8 @@
                 }
             });
         });
+
+
         // Load the file content and set it to the textarea
             $('#selectFileBtn').on('click', function() {
                 // Get the selected filename from the dropdown
@@ -680,7 +675,6 @@
                     alert('Please select a file.');
                 }
             });
-          
             // Delete a Topic
             $('#deleteTopicBtn').on('click', function() {
                 $.post('/delete_topic', {topic_name: window.currentTopic}, function(data) {
@@ -699,6 +693,10 @@
                         alert(data.message);
                     }
                 });
+            });
+           $('#OpenRenameTopicBtn').on('click', function() {
+                $('#manage_topicName').val(window.currentTopic);
+                $('#manageTopicModal').modal('show');  // Show the ]
             });
             $("#renameTopicBtn").click(function(){
                 event.preventDefault();

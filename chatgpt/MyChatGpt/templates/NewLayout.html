@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile First Sidebar</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            background-color: #f0f0f0;
+            width: 200px;
+            transition: width 0.3s ease-in-out;
+        }
+        .sidebar.collapsed {
+            width: 0;
+        }
+        .content {
+            flex: 1;
+            background-color: #fff;
+            position: relative;
+        }
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .title {
+            text-align: center;
+            flex-grow: 1;
+        }
+        .hamburger, .plus-button {
+            cursor: pointer;
+        }
+        .show-sidebar-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: none;
+            cursor: pointer;
+        }
+        .collapsed ~ .content .show-sidebar-btn {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar collapsed">
+            <div class="top-nav">
+                <!-- Hamburger icon -->
+                <div class="hamburger">
+                    &#9776;
+                </div>
+                <!-- Center aligned title -->
+                <div class="title">
+                    My Title
+                </div>
+                <!-- Plus button -->
+                <div class="plus-button">
+                    &#43;
+                </div>
+            </div>
+            <!-- Sidebar content -->
+            <div class="sidebar-content">
+                <!-- Place your sidebar content here -->
+            </div>
+        </div>
+        <div class="content">
+            <!-- Show Sidebar button -->
+            <div class="show-sidebar-btn">
+                &#9776;
+            </div>
+            <!-- Place your main content here -->
+        </div>
+    </div>
+
+    <script>
+        // Get the hamburger icon, show-sidebar button, and sidebar element
+        const hamburger = document.querySelector('.hamburger');
+        const showSidebarBtn = document.querySelector('.show-sidebar-btn');
+        const sidebar = document.querySelector('.sidebar');
+
+        // Add click event listener to the hamburger icon and show-sidebar button
+        hamburger.addEventListener('click', toggleSidebar);
+        showSidebarBtn.addEventListener('click', toggleSidebar);
+
+        // Function to toggle the sidebar
+        function toggleSidebar() {
+            // Toggle the 'collapsed' class on the sidebar element
+            sidebar.classList.toggle('collapsed');
+        }
+    </script>
+</body>
+</html>
