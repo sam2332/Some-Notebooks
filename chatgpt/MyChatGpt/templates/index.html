@@ -209,6 +209,7 @@
             <ul id="topicNamesList" class='mt-3'></ul>
             <!-- Input field for Topic name -->
             <hr>
+			<span id ='systemtotal'></span>
         </div>
         <!-- Topic area and input field for user message -->
         <div class="topic-container slide" id="main-content">
@@ -482,6 +483,23 @@ function getCookie(key) {
             });
         }
         setInterval(updateTopicNames,60*1000)
+		setInterval(() => {
+			$.ajax({
+				url: "/get_total_tokens_spent",
+				type: "GET",
+				dataType: "json",
+				contentType: "application/json",
+				success: function(data) {
+					if (data.success) {
+						let totalTokensSpent = data.total_tokens_spent;
+						$('#systemtotal').text(`System Total Tokens Spent: ${totalTokensSpent}`);
+					}
+				},
+				error: function(xhr, ajaxOptions, thrownError) {
+					console.error(`Error polling for total tokens spent: ${thrownError}`);
+				}
+			});
+		}, 5000);				
         const stopWords = [
           'a', 'about', 'above', 'after', 'of','again', 'against', 'all', 'am', 'an', 'and',
           'any', 'are', 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below',
@@ -558,7 +576,7 @@ function getCookie(key) {
           method: 'POST',
           data: {
             user_text: resultString,
-            task_description: "Please read this and create a title that is unique and will convey important information. 5 words or less"
+            task_description: "create a title that is unique and will convey important information. 6 words or less"
           },
           success: function(response) {
             if (response.success) {
@@ -755,7 +773,7 @@ function getCookie(key) {
                 var newTopicTopicName = $('#manage_topicName').val();
                 if (newTopicTopicName) {
                     // AJAX request to rename the Topic on the server
-                    $.post('/rename_topic_topic', {current_topic_name: topicToManage, new_topic_name: newTopicTopicName}, function(data) {
+                    $.post('/rename_topic_topic', {current_topic_name: currentTopic, new_topic_name: newTopicTopicName}, function(data) {
                       if (data.success) {
                         alert('Topic renamed successfully!');
                         currentTopic = newTopicTopicName; // Update the current topic name

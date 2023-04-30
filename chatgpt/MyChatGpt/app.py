@@ -303,7 +303,11 @@ def delete_message():
         return jsonify({"success": False, "message": "Topic not found."})
 
 
-
+@app.route("/get_total_tokens_spent", methods=["GET"])
+def get_total_tokens_spent():
+    return jsonify({"success": True, "total_tokens_spent": str(system_info['total_tokens'])+ " tokens or "+format_currency(
+                (float(system_info['total_tokens'])/1000)*float(0.002))})
+    
 @app.route('/gpt', methods=['POST'])
 def gpt():
     user_text = request.form.get('user_text')
@@ -315,7 +319,7 @@ def gpt():
     try:        
         tmp_room = {}
         tmp_room["messages"] = [
-            {"system": task_description},
+            {"user": task_description},
             {"user": user_text}
         ]
         tmp_room["meta"] = {'tokens_spent':0,"model":"gpt-3.5-turbo"}
