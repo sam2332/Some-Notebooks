@@ -136,3 +136,7 @@ o365_token.txt
 Android Automation/Beholder/game.png
 Microsoft/Executable Signing Extractor/exports.json
 Machine Learning/data/mnist/mnist.pkl
+Machine Learning/ChatGPT/MyChatGpt/System.JsonPickle
+Machine Learning/ChatGPT/MyChatGpt/System.JsonPickle
+**/*.csv
+**/*.pkl
