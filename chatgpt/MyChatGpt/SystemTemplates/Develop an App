@@ -1,6 +1,0 @@
-Develop a {{project_type}} using {{programming_language}}.
-Your code should be clean, efficient, and well-documented, adhering to best practices for {{programming_language}}.
-Additionally, ensure that your code is optimized, and make use of appropriate frameworks and libraries.
-You should provide documentation on your use of these libraries.
-You may choose to implement error handling, input validation, or a GUI, if you wish.
-When submitting your code, please include instructions for how to build and run the application.
