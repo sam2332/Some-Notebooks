@@ -299,6 +299,7 @@
                         <label for="modelSelection">Model Selection</label>
                         <select class="form-control" id="create_modelSelection">
                             <optgroup label="Chat Models">
+                                <option value="gpt-4">gpt-4</option> 
                                 <option value="gpt-3.5-turbo">gpt-3.5-turbo</option> 
                             </optgroup>
                             <optgroup label="Text Models">
@@ -499,7 +500,7 @@ function getCookie(key) {
 					console.error(`Error polling for total tokens spent: ${thrownError}`);
 				}
 			});
-		}, 5000);				
+		}, 15000);				
         const stopWords = [
           'a', 'about', 'above', 'after', 'of','again', 'against', 'all', 'am', 'an', 'and',
           'any', 'are', 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below',

@@ -20,9 +20,6 @@ def load_config(name):
 
 save_location = Path("DB.JsonPickle")
 system_info = load_config("System.JsonPickle")
-if len(system_info.keys()) ==0:
-    system_info['total_tokens'] = 0
-save_config("System.JsonPickle",system_info)
 def save_topics(topictopics):
     save_location.write_text(jsonpickle.encode(topictopics,indent=4))
 
@@ -51,8 +48,9 @@ def convertMessagesToCompletion(a):
 
 def generate_gpt_response(topic_topic):
     model = topic_topic['meta']['model']
-    if model  in ["gpt-3.5-turbo"]:
-        response =  openai.ChatCompletion.create(
+    print(model)
+    if model  in ["gpt-3.5-turbo","gpt-4"]:
+        response = openai.ChatCompletion.create(
             model=model,
             messages=convertMessagesToGPTFormat(
                 topic_topic["messages"]
@@ -307,9 +305,13 @@ def delete_message():
 def get_total_tokens_spent():
     return jsonify({"success": True, "total_tokens_spent": str(system_info['total_tokens'])+ " tokens or "+format_currency(
                 (float(system_info['total_tokens'])/1000)*float(0.002))})
+
     
 @app.route('/gpt', methods=['POST'])
 def gpt():
+
+    modal = request.args.get('modal',default='gpt-3.5-turbo')
+    
     user_text = request.form.get('user_text')
     task_description = request.form.get('task_description')
 
@@ -322,10 +324,8 @@ def gpt():
             {"user": task_description},
             {"user": user_text}
         ]
-        tmp_room["meta"] = {'tokens_spent':0,"model":"gpt-3.5-turbo"}
+        tmp_room["meta"] = {'tokens_spent':0,"model":modal}
         response = generate_gpt_response(tmp_room)
-
-
         print(tmp_room["meta"]["tokens_spent"],"tokens spent")
 
         return jsonify({
