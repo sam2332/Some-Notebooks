@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Diagram Editor</title>
+	<!-- Bootstrap 5 CSS -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.css" integrity="sha512-bR79Bg78Wmn33N5nvkEyg66hNg+xF/Q8NA8YABbj+4sBngYhv9P8eum19hdjYcY7vXk/vRkhM3v/ZndtgEXRWw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<!-- JointJS CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/jointjs/3.7.2/joint.min.css" rel="stylesheet">
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.js" integrity="sha512-L6XANV6sOsx9N9c787eDN1pjB2Pzautd3xDgn4cMKuoleHSuCJi5pCDGPCtwE3Bd4A1Olnr0k0aQXbczYzg+wg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<!-- Lodash -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+
+<!-- Backbone.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.4.1/backbone-min.js"></script>
+
+<!-- JointJS JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jointjs/3.7.2/joint.min.js"></script>
+
+    <style>
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+#stencilContainer {
+    width: 200px;
+    height: 100%;
+    border-right: 1px solid #000;
+    padding: 10px;
+    float: left;
+    overflow: auto;
+}
+
+#paperContainer {
+    position: absolute;
+    left: 210px;
+	background-color:#919191;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    overflow: auto;
+}
+
+.draggable {
+    margin-bottom: 10px;
+    cursor: move;
+    border: 1px solid black;
+    text-align: center;
+}
+
+.draggable svg {
+    width: 100%;
+    height: 100%;
+}
+
+    </style>
+</head>
+<body>
+
+
+	<div id="stencilContainer">
+		<div class="draggable" id="form_start" draggable="true" ">
+			<span>Form Start</span>
+		</div>
+		<div class="draggable" id="page"  draggable="true" >
+			<span>Page</span>
+		</div>
+		<div class="draggable" id="decision"  draggable="true" >
+			<span>Decision</span>
+		</div>
+		<div class="draggable" id="form_end" draggable="true" >
+			<span>Form End</span>
+		</div>
+
+	</div>
+
+	<div id="paperContainer" ></div>
+	
+	
+	<div class="modal fade" id="noteModal" tabindex="-1" aria-labelledby="noteModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="noteModalLabel">Notes</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<textarea class="form-control" id="nodeNoteInput" rows="3"></textarea>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" onclick="setNodeNote()">Save</button>
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+<!-- Modal -->
+<div class="modal fade" id="AjaxModal" tabindex="-1" aria-labelledby="AjaxModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="AjaxModalLabel">Modal title</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Modal content will be loaded here from your AJAX request -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<script>
+class GraphManager {
+    constructor() {
+        this.graph = new joint.dia.Graph();
+        this.debouncedSave = _.debounce(this.save.bind(this), 500);
+        this.init();
+    }
+
+    init() {
+        $.get('/load', (data) => {
+            this.graph.fromJSON(data);
+        }).fail(() => {
+            console.error('Failed to load graph');
+        });
+
+        this.graph.on('add remove change:attrs change:source change:target change:position change:size', () => {
+            this.debouncedSave();
+        });
+    }
+
+    save() {
+        var graphJson = this.graph.toJSON();
+        $.ajax({
+            url: '/save',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(graphJson),
+            success: function(data) {
+                console.log('Successfully saved changes');
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Failed to save changes: ' + textStatus);
+            }
+        });
+    }
+
+    getGraph() {
+        return this.graph;
+    }
+}
+
+ 
+ 
+ 
+ class PaperManager {
+    constructor(graphManager) {
+        this.graphManager = graphManager;
+        this.panning = false;
+        this.initialPaperPosition = { x: 0, y: 0 };
+        this.initialMousePosition;
+        this.paper = new joint.dia.Paper({
+            el: $('#paperContainer'),
+            width: $('#paperContainer').width(),
+            height: $('#paperContainer').height(),
+            model: this.graphManager.getGraph(),
+            gridSize: 15,
+            gridThickness:2,
+            drawGrid: false
+        });
+        this.setGrid(this.paper, 10, '#FFFFFF');
+		
+        this.init();
+    }
+	 
+     handleDoubleClick(cellView, evt) {
+        // The cell's ID
+        let id = cellView.model.id;
+
+        // AJAX request
+        $.ajax({
+            url: '/ViewNode',
+            data: { id: id },
+            method: 'GET',
+            success: function(response) {
+                // Assuming 'response' is the HTML content to be displayed in the modal
+                $('#AjaxModal .modal-content').html(response);
+                $('#AjaxModal').modal('show');
+            },
+            error: function(error) {
+                console.log('Error:', error);
+            }
+        });
+    }
+    init() {
+        $(window).resize(() => {
+            this.paper.setDimensions($('#paperContainer').width(), $('#paperContainer').height());
+        });
+
+        this.paper.on('blank:pointerdown', (evt, x, y) => {
+            this.panning = true;
+            this.initialPaperPosition = this.paper.translate();
+            this.initialMousePosition = { x: evt.clientX, y: evt.clientY };
+        });
+        this.paper.on('cell:pointerdblclick', this.handleDoubleClick.bind(this));
+
+        $('body').on('mousemove', (evt) => {
+            if (this.panning) {
+                let currentMousePosition = { x: evt.clientX, y: evt.clientY };
+                let deltaX = currentMousePosition.x - this.initialMousePosition.x;
+                let deltaY = currentMousePosition.y - this.initialMousePosition.y;
+                this.paper.translate(this.initialPaperPosition.tx + deltaX, this.initialPaperPosition.ty + deltaY);
+            }
+        });
+
+        $('body').on('mouseup', (evt) => {
+            this.panning = false;
+        });
+    }
+
+    setGrid(paper, gridSize, color) {
+        paper.options.gridSize = gridSize;
+        let canvas = $('<canvas/>', { width: gridSize, height: gridSize });
+        canvas[0].width = gridSize;
+        canvas[0].height = gridSize;
+        let context = canvas[0].getContext('2d');
+        context.beginPath();
+        context.rect(1, 1, 1, 1);
+        context.fillStyle = color || '#AAAAAA';
+        context.fill();
+        let gridBackgroundImage = canvas[0].toDataURL('image/png');
+        paper.$el.css('background-image', 'url("' + gridBackgroundImage + '")');
+    }
+
+    getPaper() {
+        return this.paper;
+    }
+}
+
+ 
+ class DragDropManager {
+    constructor(paperManager, graphManager) {
+        this.paperManager = paperManager;
+        this.graphManager = graphManager;
+        this.attachHandlers();
+    }
+
+
+	attachHandlers() {
+        let draggableElements = document.getElementsByClassName("draggable");
+        for (let i = 0; i < draggableElements.length; i++) {
+            draggableElements[i].addEventListener("dragstart", this.drag.bind(this));
+        }
+        
+        let paperContainer = document.getElementById("paperContainer");
+        paperContainer.addEventListener("drop", this.drop.bind(this));
+        paperContainer.addEventListener("dragover", this.allowDrop.bind(this));
+    }
+	
+    drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.id);
+    }
+
+    allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    drop(ev) {
+        ev.preventDefault();
+        var data = ev.dataTransfer.getData("text");
+
+        var paper = this.paperManager.getPaper();
+        var graph = this.graphManager.getGraph();
+        var position = paper.clientToLocalPoint({ x: ev.clientX, y: ev.clientY });
+
+        var cell;
+        if (data === 'page') {
+            cell = new joint.shapes.devs.Model({
+                position: position,
+                size: { width: 90, height: 30 },
+                inPorts: ['in'],
+                outPorts: ['out'],
+                attrs: {
+                    '.label': { text: 'Page', 'ref-x': .5, 'ref-y': .2 },
+                    rect: { fill: '#2ECC71' }
+                }
+            });
+        }else if (data === 'decision') {
+
+            cell = new joint.shapes.devs.Model({
+                position: position,
+                size: { width: 90, height: 60 },
+                inPorts: ['Page'],
+                outPorts: ['True','False'],
+                attrs: {
+                    '.label': { text: 'Decision', 'ref-x': .5, 'ref-y': .3 },
+                    rect: { fill: '#3333FF' }
+                }
+            });
+        }else if (data === 'form_start') {
+            cell = new joint.shapes.devs.Model({
+                position: position,
+                size: { width: 110, height: 30 },
+                outPorts: ['out'],
+                attrs: {
+                    '.label': { text: 'Form Start', 'ref-x': .5, 'ref-y': .2 },
+                    rect: { fill: '#FF3333' }
+                }
+            });
+        }else if (data === 'form_end') {
+            cell = new joint.shapes.devs.Model({
+                position: position,
+                size: { width: 110, height:30 },
+                inPorts: ['in'],
+                attrs: {
+                    '.label': { text: 'Form End', 'ref-x': .5, 'ref-y': .2 },
+                    rect: { fill: '#33FF33' }
+                }
+            });
+        }
+        
+        
+        if (cell) {
+            graph.addCell(cell);
+        }
+    }
+}
+
+
+
+ 
+ 
+ // instantiate GraphManager
+let graphManager = new GraphManager();
+
+// instantiate other classes
+let paperManager = new PaperManager(graphManager);
+let contextMenuManager = new ContextMenuManager(graphManager, paperManager);
+let dragDropManager = new DragDropManager(paperManager, graphManager);
+
+
+
+
+</script>
+
+</body>
+</html>
