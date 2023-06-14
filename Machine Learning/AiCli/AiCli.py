@@ -11,22 +11,13 @@ from datetime import datetime
 import uuid
 import jinja2
 from jinja2 import Template
+import subprocess
 
 def _TS(TEMPLATE_INPUT, args={}):
     # Always use FileSystemLoader with the current directory
-    templateLoader = jinja2.FileSystemLoader(searchpath="./")
+    templateLoader = jinja2.FileSystemLoader(searchpath="./.AiCli/")
     templateEnv = jinja2.Environment(loader=templateLoader)
-    
-    # Check if the input is a file in the current directory
-    if os.path.isfile(TEMPLATE_INPUT):
-        # Load from a file
-        template = templateEnv.get_template(TEMPLATE_INPUT)
-    else:
-        # If not a file, load from a string
-        # However, the FileSystemLoader is still in effect for any imported/included templates
-        template = Template(TEMPLATE_INPUT)
-        template.environment = templateEnv
-
+    template = templateEnv.get_template(TEMPLATE_INPUT)
     return template.render(**args)
 
 openai.api_key = os.environ.get('OPENAI_API_KEY',None)
@@ -74,14 +65,13 @@ class ChatRoom:
         
         return new_chatroom
     
-    def send_message(self, message,respond = True,max_tokens=700,temperature=0.7):
+    def send_message(self, message,respond = True,max_tokens=2000,temperature=0.7):
         self.chat_history.append({
             'content': message,
             'role': 'user'
         })
 
         if respond:
-            token_count = 0
             self.last_response = openai.ChatCompletion.create(
                 model=self.model,
                 messages=self.chat_history,
@@ -99,30 +89,117 @@ class ChatRoom:
             return self.last_response
         else:
             return True
+
+def new_chatroom():
+    room_dir = Path('.AiCli')
+    room_name = input("Chat Rooom Name: ")
+    prompt_file_path = Path(room_dir,room_name+".prompt.txt")
+    history_file_path = Path(room_dir, room_name+".history.txt")
+    prompt_file_path.write_text("")
+    if not history_file_path.is_file():
+        history_file_path.write_text("")
         
+    print("Chatroom created, please initalize")
+    subprocess.Popen(['notepad.exe', str(prompt_file_path)])
+    
+    
+def choose_chatroom():
+    room_dir = Path('.AiCli')
+    files = list(room_dir.glob('*'))
+    file_dict = {}
+    for file in files:
+        base_name = file.stem.split('.')[0]
+        if base_name not in file_dict:
+            file_dict[base_name] = file
+    print("Please select the chatroom you would like to enter.")
+    for i, file in enumerate(file_dict.keys()):
+        print(f"{i}: {file}")
+    print("#"*15)
+    print()
+    print(f"c: Create New")
+
+    while True:
+        file_choice = input("Enter the number of the file you want to select: ")
+        if file_choice.isdigit() and int(file_choice) in range(len(file_dict)):
+            selected_file = list(file_dict.values())[int(file_choice)]
+            print(f"You selected: {selected_file.stem.split('.')[0]}")
+            return selected_file.stem.split('.')[0]
+        else:
+            if file_choice == 'c':
+                new_chatroom()
+            print("Invalid choice. Please enter a valid number.")
+
+def choose(options, title="Please make a selection:"):
+    while True:
+        print(title)
+        for key, option in options.items():
+            print(f"[{key}] {option}")
+
+        user_input = input(":> ").strip()
+
+        if user_input in options:
+            return options[user_input]
+        else:
+            print("Invalid choice. Please enter a valid number.\n")
+
+
 
 parser = argparse.ArgumentParser(description="Process a file.")
-parser.add_argument('roomname', type=str, nargs='?', default='default', help="Room Name")
+parser.add_argument('roomname', type=str, nargs='?', default='NOT SELECTED', help="Room Name")
 
 args = parser.parse_args()
-prompt_file_path = args.roomname+".chat.prompt"
-history_file_path = Path(args.roomname+".chat.history")
-if not history_file_path.is_file():
-    history_file_path.write_text("")
-if not Path(prompt_file_path).is_file():
+room_dir = Path('.AiCli')
+if not room_dir.exists():
+    room_dir.mkdir()
+
+room_name = args.roomname
+if room_name == 'NOT SELECTED':
+    room_name = choose_chatroom()
+        
+        
+prompt_file_path = Path(room_dir,room_name+".prompt.txt")
+history_file_path = Path(room_dir, room_name+".history.txt")
+if not prompt_file_path.is_file():
     if input("Room does not exist, create? [Y/n]")=="Y":
-        Path(prompt_file_path).write_text(""" 
-        Please Put input content info into this file.    
-        """)
+        prompt_file_path.write_text("")
+        
+        if not history_file_path.is_file():
+            history_file_path.write_text("")
+            
         print("Chatroom created, please initalize")
-    
-else:   
-    
+        subprocess.Popen(['notepad.exe', str(prompt_file_path)])
+        
+else:      
     buffer = []
     
     if history_file_path.exists():
         buffer.extend(history_file_path.read_text().splitlines())
-        
+        buffer.append("")
+    
+    # usage:
+    models = {
+        '1': 'gpt-3.5-turbo',
+        '2': 'gpt-3.5-turbo-16k',
+        '3': 'gpt-4',
+    }
+
+    Model = choose(models, title="Please select a Model:")
+    print(f"Using: {Model}")
+            
+            
+            
+    # usage:
+    modes = {
+        '1': 'Chat Room',
+        '2': 'Instruct'
+    }
+
+    Mode = choose(modes, title="Please select a Chat Mode:")
+    
+    print(f"Starting {Mode} Mode")
+
+    print("-== Send Blank Line to exit ==-")
+    prompt_input = _TS(room_name+".prompt.txt",locals())
     ochat_room = ChatRoom(system_prompt=f"""
 RESPONSE INSTRUCTION:
 Answer the specific question asked without adding any additional context or information.
@@ -131,31 +208,11 @@ Don't mention yourself or add any unnecessary information into your responses.
 If a question cannot be answered, simply state that it can't be answered. Do not provide further explanation or reasons.
 Don't include unnecessary explanations, details, or advice unless specifically asked for.
 Please process the input according to these instructions. 
-Please follow the directions provided in the input text.
-
-The content of the users directions will be provided in the next message.
-    """.strip(),save=False,model='gpt-4')
-    
-    output = ochat_room.send_message(_TS(prompt_file_path,locals()), respond=input("Generate Inital Response [Y/n]:> ").lower()=="y")
-    if not isinstance(output,bool):
-        buffer.extend(output.splitlines())
-        print(output)
- 
+Please follow the directions provided next.
+""".strip(),save=False,model=Model)
+    ochat_room.send_message(prompt_input,respond=False)
     Mode = True
     chat_room = ochat_room.clone()
-    
-    while True:
-        uin = input("[1] Chat Room or [2] Instruct:> ")
-        if uin.strip() =='1':
-            Mode = 'Chat'
-            print("Starting Chat Mode")
-            break
-        if uin.strip() =='2':
-            Mode = 'Instruct'
-            print("Starting Instruct Mode")
-            break
-    print("-== Send Blank Line to exit ==-")
-        
     uin = None
     try:
         while uin != "":
