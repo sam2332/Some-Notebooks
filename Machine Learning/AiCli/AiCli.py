@@ -12,13 +12,19 @@ import uuid
 import jinja2
 from jinja2 import Template
 import subprocess
+import importlib
 
-def _TS(TEMPLATE_INPUT, args={}):
-    # Always use FileSystemLoader with the current directory
+# Suppose the name of your module is 'my_module'.
+module_name = 'my_module'
+
+# Import the module
+def _TS(TEMPLATE_NAME):
     templateLoader = jinja2.FileSystemLoader(searchpath="./.AiCli/")
     templateEnv = jinja2.Environment(loader=templateLoader)
+    TEMPLATE_INPUT = TEMPLATE_NAME +".prompt.txt"
     template = templateEnv.get_template(TEMPLATE_INPUT)
-    return template.render(**args)
+    return template.render()
+
 
 openai.api_key = os.environ.get('OPENAI_API_KEY',None)
 if openai.api_key  is None:
@@ -28,33 +34,16 @@ if openai.api_key  is None:
 # In[5]:
 
 class ChatRoom:
-    def __init__(self, room_id=None,model='gpt-3.5-turbo',system_prompt="You are a helpful assistant.",save=True):
+    def __init__(self, room_id=None,model='gpt-3.5-turbo',system_prompt="You are a helpful assistant."):
         if room_id is None:
             room_id = uuid.uuid4()
         self.room_id = room_id
-        self.chat_history_file = f'chat_history.json'
         self.model = model
         self.system_prompt = system_prompt
         self.save = save
         
         self.chat_history = [{"role": "system", "content": self.system_prompt}]
-        if save:
-            if not os.path.exists(self.chat_history_file):
-                with open(self.chat_history_file, 'w') as f:
-                    json.dump([], f)
-            else:
-                self.get_chat_history()
-            
-    def get_chat_history(self):
-        if self.save:
-            with open(self.chat_history_file, 'r') as f:
-                self.chat_history = json.load(f)
-
-    def save_chat_history(self):
-        if self.save:
-            with open(self.chat_history_file, 'w') as f:
-                json.dump(self.chat_history, f)
-            
+       
     def clone(self):
         new_room_id = f"{self.room_id}_{uuid.uuid4()}"
         new_chatroom = ChatRoom(new_room_id, model=self.model, system_prompt=self.system_prompt,save=self.save)
@@ -83,8 +72,7 @@ class ChatRoom:
                 'content': self.last_response,
                 'role': 'assistant'
             })
-        self.save_chat_history()
-
+        
         if respond:
             return self.last_response
         else:
@@ -127,6 +115,7 @@ def choose_chatroom():
         else:
             if file_choice == 'c':
                 new_chatroom()
+                return choose_chatroom()
             print("Invalid choice. Please enter a valid number.")
 
 def choose(options, title="Please make a selection:"):
@@ -199,7 +188,8 @@ else:
     print(f"Starting {Mode} Mode")
 
     print("-== Send Blank Line to exit ==-")
-    prompt_input = _TS(room_name+".prompt.txt",locals())
+    prompt_input = _TS(room_name)
+    print(prompt_input)
     ochat_room = ChatRoom(system_prompt=f"""
 RESPONSE INSTRUCTION:
 Answer the specific question asked without adding any additional context or information.
@@ -209,7 +199,7 @@ If a question cannot be answered, simply state that it can't be answered. Do not
 Don't include unnecessary explanations, details, or advice unless specifically asked for.
 Please process the input according to these instructions. 
 Please follow the directions provided next.
-""".strip(),save=False,model=Model)
+""".strip(),model=Model)
     ochat_room.send_message(prompt_input,respond=False)
     Mode = True
     chat_room = ochat_room.clone()
