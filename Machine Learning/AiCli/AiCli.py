@@ -11,7 +11,6 @@ import jinja2
 import openai
 
 
-# Import the module
 def render_prompt_file(template_name):
     template_loader = jinja2.FileSystemLoader(searchpath="./.AiCli/")
     template_env = jinja2.Environment(loader=template_loader)
@@ -23,8 +22,6 @@ openai.api_key = os.environ.get("OPENAI_API_KEY", None)
 if openai.api_key is None:
     print("PLEASE SET ENVIRONAMENT VAR: OPENAI_API_KEY")
     sys.exit(1)
-
-# In[5]:
 
 
 class ChatRoom:
@@ -47,8 +44,6 @@ class ChatRoom:
         new_chatroom = ChatRoom(
             new_room_id, model=self.model, system_prompt=self.system_prompt
         )
-
-        # Copy chat history
         new_chatroom.chat_history = self.chat_history
 
         return new_chatroom
@@ -121,13 +116,13 @@ def choose_chatroom():
 def choose(options, title="Please make a selection:"):
     while True:
         print(title)
-        for key, option in options.items():
+        for key, option in enumerate(options):
             print(f"[{key}] {option}")
 
         user_input = input(":> ").strip()
 
-        if user_input in options:
-            return options[user_input]
+        if user_input in [str(r) for r in range(0,len(options))]:
+            return options[int(user_input)]
         else:
             print("Invalid choice. Please enter a valid number.\n")
 
@@ -166,18 +161,19 @@ else:
         buffer.extend(history_file_path.read_text().splitlines())
         buffer.append("")
 
-    # usage:
-    models = {
-        "1": "gpt-3.5-turbo",
-        "2": "gpt-3.5-turbo-16k",
-        "3": "gpt-4",
-    }
+    models = [
+         "gpt-3.5-turbo",
+         "gpt-3.5-turbo-16k",
+         "gpt-4",
+    ]
 
     MODEL = choose(models, title="Please select a Model:")
     print(f"Using: {MODEL}")
 
-    # usage:
-    modes = {"1": "Chat Room", "2": "Instruct"}
+    modes = [
+        "Chat Room",
+        "Instruct"
+    ]
 
     MODE = choose(modes, title="Please select a Chat Mode:")
 
@@ -185,7 +181,6 @@ else:
 
     print("-== Send Blank Line to exit ==-")
     prompt_input = render_prompt_file(room_name)
-    print(prompt_input)
     ochat_room = ChatRoom(
         system_prompt=f"""
 RESPONSE INSTRUCTION:
@@ -217,6 +212,3 @@ Please follow the directions provided next.
             USER_INPUT = input(":> ").strip()
     except Exception as e:
         print(e)
-
-
-# In[ ]:
